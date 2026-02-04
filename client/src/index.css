@@ -156,6 +156,28 @@
   
   /* Typography Scale Overrides */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold tracking-tight;
+    @apply font-display font-semibold tracking-tight uppercase;
+  }
+}
+
+@layer components {
+  .brand-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  }
+  
+  .glass-card {
+    @apply bg-background/60 backdrop-blur-md border border-border/50;
+  }
+
+  .industrial-border {
+    @apply border-2 border-primary/20 relative overflow-hidden transition-all hover:border-primary/40;
+    &::after {
+      content: '';
+      @apply absolute top-0 left-0 w-1 h-full bg-primary;
+    }
+  }
+
+  .text-glow-red {
+    text-shadow: 0 0 10px hsla(var(--primary), 0.4);
   }
 }

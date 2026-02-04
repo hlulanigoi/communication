@@ -26,20 +26,20 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="border-l-4 border-l-primary/50 shadow-sm hover:shadow-md transition-shadow">
+          <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground font-display tracking-wide uppercase">
+              <CardTitle className="text-xs font-bold text-muted-foreground font-display tracking-widest uppercase">
                 {stat.label}
               </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <stat.icon className={`h-4 w-4 ${stat.color} opacity-80`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-display">{stat.value}</div>
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-rose-500"}>
+              <div className="text-3xl font-black font-display text-glow-red">{stat.value}</div>
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
+                <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
                   {stat.change}
                 </span>
-                from last month
+                VS PREV PERIOD
               </p>
             </CardContent>
           </Card>
@@ -69,35 +69,32 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Jobs List */}
-        <Card className="col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Urgent Jobs</CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs">View All</Button>
+        <Card className="col-span-3 border-2 border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/20">
+            <CardTitle className="text-sm">URGENT SERVICE TICKETS</CardTitle>
+            <Button variant="ghost" size="sm" className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter">Manage Queue</Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {mockJobs.slice(0, 4).map((job) => (
-                <div key={job.id} className="flex items-start gap-4 p-3 rounded-lg border border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors">
-                  <div className={`mt-1 p-1.5 rounded-full bg-background border border-border ${
-                    job.priority === 'High' ? 'text-rose-500' : 
-                    job.priority === 'Medium' ? 'text-amber-500' : 'text-emerald-500'
+                <div key={job.id} className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all">
+                  <div className={`mt-1 p-1.5 ${
+                    job.priority === 'High' ? 'bg-primary text-primary-foreground' : 
+                    job.priority === 'Medium' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
                   }`}>
                     {job.priority === 'High' ? <AlertTriangle className="w-3.5 h-3.5" /> : 
                      job.priority === 'Medium' ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-none truncate">{job.description}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-mono bg-background/50">
-                        {job.id}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground font-display">{job.vehicleId}</span>
+                    <p className="text-sm font-bold leading-tight truncate uppercase tracking-tight">{job.description}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5">{job.id}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{job.vehicleId}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-medium text-foreground block">{job.assignedTo}</span>
-                    <span className="text-[10px] text-muted-foreground">{job.status}</span>
+                    <span className="text-[10px] font-black text-foreground block uppercase">{job.assignedTo}</span>
+                    <span className="text-[9px] text-primary font-bold uppercase">{job.status}</span>
                   </div>
                 </div>
               ))}
@@ -151,8 +148,8 @@ export default function Dashboard() {
                "Lookup Part",
                "Schedule Appointment"
              ].map((action, i) => (
-               <Button key={i} variant="outline" className="w-full justify-start text-left bg-background/50 hover:bg-background hover:border-primary/50 transition-all group">
-                 <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center mr-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+               <Button key={i} variant="outline" className="w-full justify-start text-left bg-background/50 hover:bg-primary hover:text-primary-foreground border-border hover:border-primary transition-all group font-bold text-xs uppercase italic tracking-tighter">
+                 <div className="w-5 h-5 bg-muted flex items-center justify-center mr-3 group-hover:bg-primary-foreground group-hover:text-primary transition-colors">
                     <Plus className="w-3 h-3" />
                  </div>
                  {action}
