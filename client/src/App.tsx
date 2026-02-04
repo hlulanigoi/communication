@@ -10,6 +10,8 @@ import JobBoard from "@/pages/JobBoard";
 import Inventory from "@/pages/Inventory";
 import ClientDirectory from "@/pages/ClientDirectory";
 import Billing from "@/pages/Billing";
+import Communication from "@/pages/Communication";
+import Analytics from "@/pages/Analytics";
 
 function Router() {
   return (
@@ -20,11 +22,12 @@ function Router() {
       <Route path="/inventory" component={Inventory} />
       <Route path="/clients" component={ClientDirectory} />
       <Route path="/billing" component={Billing} />
+      <Route path="/communication" component={Communication} />
+      <Route path="/analytics" component={Analytics} />
       
       {/* Fallback routes for demos */}
       <Route path="/schedule" component={Dashboard} />
       <Route path="/documents" component={Dashboard} />
-      <Route path="/analytics" component={Dashboard} />
       <Route path="/admin" component={Dashboard} />
       
       <Route component={NotFound} />
