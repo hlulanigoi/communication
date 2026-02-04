@@ -24,13 +24,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="h-full flex flex-col">
           {/* Logo Area */}
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                <Settings className="w-5 h-5 text-primary-foreground animate-spin-slow" />
-              </div>
-              <span className="font-display font-bold text-xl tracking-wide text-sidebar-foreground">
-                AUTO<span className="text-primary">SYNC</span>
+            <div className="flex items-center">
+              <span className="font-display font-black text-2xl italic tracking-tighter text-sidebar-foreground">
+                JUST<span className="text-primary NOT-italic">FIX</span>
               </span>
+              <div className="flex ml-1 items-center">
+                <div className="w-2 h-4 bg-primary skew-x-[-20deg]" />
+                <div className="w-2 h-4 bg-primary skew-x-[-20deg] ml-0.5" />
+              </div>
             </div>
           </div>
 
