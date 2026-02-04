@@ -1,3 +1,17 @@
+export const mockClients = [
+  { id: "C-001", name: "Marcus Webb", email: "marcus.webb@example.com", phone: "+27 82 123 4567", type: "Individual", status: "Active", vehicles: 1 },
+  { id: "C-002", name: "Sarah Jenkins", email: "sarah.j@porsche-club.org", phone: "+27 71 987 6543", type: "Individual", status: "Active", vehicles: 1 },
+  { id: "C-003", name: "TechCorp Logistics", email: "fleet@techcorp.com", phone: "+27 11 445 0000", type: "Corporate", status: "Active", vehicles: 12 },
+  { id: "C-004", name: "James Chen", email: "james.chen@design.co", phone: "+27 83 555 1212", type: "Individual", status: "Active", vehicles: 2 },
+  { id: "C-005", name: "Elena Voight", email: "elena@voight-legal.com", phone: "+27 72 444 8888", type: "Individual", status: "Active", vehicles: 3 },
+];
+
+export const mockInvoices = [
+  { id: "INV-2024-001", client: "Marcus Webb", date: "2024-02-10", amount: 1250.00, status: "Paid", dueDate: "2024-02-10" },
+  { id: "INV-2024-002", client: "Elena Voight", date: "2024-02-12", amount: 3400.00, status: "Pending", dueDate: "2024-02-26" },
+  { id: "INV-2024-003", client: "TechCorp Logistics", date: "2024-02-14", amount: 890.00, status: "Overdue", dueDate: "2024-02-11" },
+];
+
 export const mockInventory = [
   { id: "P-101", name: "Brake Pad Set (Front)", sku: "BP-F-001", category: "Brakes", stock: 14, minStock: 5, price: 85.00, location: "A-12-3" },
   { id: "P-102", name: "Synthetic Oil 5W-30 (1L)", sku: "OIL-SYN-530", category: "Fluids", stock: 45, minStock: 20, price: 12.50, location: "B-04-1" },
@@ -23,7 +37,7 @@ export const mockJobs = [
   { id: "J-2024-004", vehicleId: "V005", type: "Inspection", description: "Pre-purchase Inspection", status: "In Progress", priority: "High", assignedTo: "Alex M.", date: "2024-02-14" },
 ];
 
-import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, Shield, BarChart3, LayoutDashboard } from "lucide-react";
+import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, Shield, BarChart3, LayoutDashboard, CreditCard } from "lucide-react";
 
 export const stats = [
   { label: "Vehicles in Shop", value: "12", change: "+2", icon: Car, color: "text-blue-500" },
@@ -39,6 +53,7 @@ export const navItems = [
   { icon: Wrench, label: "Jobs", href: "/jobs" },
   { icon: Users, label: "Clients", href: "/clients" },
   { icon: Box, label: "Inventory", href: "/inventory" },
+  { icon: CreditCard, label: "Billing", href: "/billing" },
   { icon: FileText, label: "Documents", href: "/documents" },
   { icon: Activity, label: "Analytics", href: "/analytics" },
   { icon: Shield, label: "Admin", href: "/admin" },
