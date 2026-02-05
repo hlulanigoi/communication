@@ -35,11 +35,11 @@ export const mockJobs = [
 ];
 
 export const mockClients = [
-  { id: "C-001", name: "Marcus Webb", email: "marcus.webb@example.com", phone: "+27 82 123 4567", type: "Individual", status: "Active", vehicles: 1 },
-  { id: "C-002", name: "Sarah Jenkins", email: "sarah.j@porsche-club.org", phone: "+27 71 987 6543", type: "Individual", status: "Active", vehicles: 1 },
-  { id: "C-003", name: "TechCorp Logistics", email: "fleet@techcorp.com", phone: "+27 11 445 0000", type: "Corporate", status: "Active", vehicles: 12 },
-  { id: "C-004", name: "James Chen", email: "james.chen@design.co", phone: "+27 83 555 1212", type: "Individual", status: "Active", vehicles: 2 },
-  { id: "C-005", name: "Elena Voight", email: "elena@voight-legal.com", phone: "+27 72 444 8888", type: "Individual", status: "Active", vehicles: 3 },
+  { id: "C-001", name: "Marcus Webb", email: "marcus.webb@example.com", phone: "+27 82 123 4567", type: "Individual", status: "Active", vehicles: 1, source: "Direct" },
+  { id: "C-002", name: "Sarah Jenkins", email: "marcus.webb@example.com", phone: "+27 71 987 6543", type: "Individual", status: "Active", vehicles: 1, source: "Insurance (Santam)" },
+  { id: "C-003", name: "TechCorp Logistics", email: "fleet@techcorp.com", phone: "+27 11 445 0000", type: "Corporate", status: "Active", vehicles: 12, source: "Fleet Contract" },
+  { id: "C-004", name: "James Chen", email: "james.chen@design.co", phone: "+27 83 555 1212", type: "Individual", status: "Active", vehicles: 2, source: "Direct" },
+  { id: "C-005", name: "Mutual Insurance", email: "claims@mutual.co.za", phone: "+27 72 444 8888", type: "Insurance", status: "Active", vehicles: 45, source: "Insurance Partner" },
 ];
 
 export const mockInvoices = [

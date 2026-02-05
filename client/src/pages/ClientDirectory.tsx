@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Mail, Phone, MoreHorizontal, Building2, User } from "lucide-react";
+import { Search, Plus, Mail, Phone, MoreHorizontal, Building2, User, ShieldCheck } from "lucide-react";
 
 export default function ClientDirectory() {
   return (
@@ -37,6 +37,7 @@ export default function ClientDirectory() {
                 <TableHead>Client</TableHead>
                 <TableHead>Contact Info</TableHead>
                 <TableHead>Account Type</TableHead>
+                <TableHead>Client Source</TableHead>
                 <TableHead>Vehicles</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -47,8 +48,10 @@ export default function ClientDirectory() {
                 <TableRow key={client.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
-                        {client.type === 'Corporate' ? <Building2 className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                      <div className="w-9 h-9 bg-secondary flex items-center justify-center border-l-2 border-l-primary/30">
+                        {client.type === 'Corporate' ? <Building2 className="w-4 h-4" /> : 
+                         client.type === 'Insurance' ? <ShieldCheck className="w-4 h-4 text-primary" /> : 
+                         <User className="w-4 h-4" />}
                       </div>
                       <div>
                         <p className="font-medium text-foreground">{client.name}</p>
@@ -69,9 +72,15 @@ export default function ClientDirectory() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="font-normal">
+                    <Badge variant="outline" className="font-normal uppercase text-[10px] tracking-tight">
                       {client.type}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${client.type === 'Insurance' ? 'bg-primary animate-pulse' : 'bg-muted-foreground/30'}`} />
+                      <span className="text-xs font-bold uppercase tracking-tighter">{client.source}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">{client.vehicles}</TableCell>
                   <TableCell>
