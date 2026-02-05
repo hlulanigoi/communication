@@ -13,13 +13,17 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Mission Control</h1>
-          <p className="text-muted-foreground mt-1">Real-time workshop overview and performance metrics.</p>
+          <p className="text-muted-foreground mt-1 uppercase text-[10px] font-bold tracking-widest">Real-time workshop overview and performance metrics.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="h-9">Export Report</Button>
-          <Button className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-[0_0_15px_rgba(20,184,166,0.3)]">
-            + New Work Order
-          </Button>
+        <div className="flex items-center gap-3 bg-secondary/20 p-2 border-l-2 border-primary">
+          <div className="flex items-center gap-2 px-3 border-r border-border/50">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-tighter">Shop Status: Active</span>
+          </div>
+          <div className="flex items-center gap-2 px-3">
+            <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Power Usage:</span>
+            <span className="text-[10px] font-black uppercase tracking-tighter text-primary">2.4kW</span>
+          </div>
         </div>
       </div>
 
@@ -47,24 +51,30 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Main Chart Area (Placeholder for now) */}
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Revenue vs. Service Costs</CardTitle>
-            <CardDescription>Monthly financial performance overview.</CardDescription>
+        {/* Main Chart Area */}
+        <Card className="col-span-4 border-2 border-border/50 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 flex gap-2">
+            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-[9px] font-black">LIVE DIAGNOSTICS</Badge>
+          </div>
+          <CardHeader className="bg-muted/10 border-b border-border/50">
+            <CardTitle className="text-sm italic">WORKSHOP THROUGHPUT & LOAD</CardTitle>
+            <CardDescription className="text-[10px] font-bold uppercase tracking-tight">Real-time efficiency monitoring</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px] flex items-end justify-between gap-2 p-4 pt-10 border-b border-border border-dashed">
+          <CardContent className="pl-2 pt-6">
+            <div className="h-[300px] flex items-end justify-between gap-3 p-4 pt-10 relative">
+              {/* Scanline effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none opacity-20" />
               {[40, 65, 45, 80, 55, 90, 75].map((h, i) => (
-                <div key={i} className="w-full bg-secondary/30 rounded-t-sm hover:bg-primary/50 transition-colors relative group" style={{ height: `${h}%` }}>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-border whitespace-nowrap z-10">
-                    ${h * 250}
+                <div key={i} className="w-full bg-secondary/30 relative group/bar transition-all duration-500" style={{ height: `${h}%` }}>
+                  <div className="absolute inset-x-0 bottom-0 bg-primary group-hover/bar:bg-primary/80 transition-all shadow-[0_0_15px_rgba(20,184,166,0.3)]" style={{ height: `${Math.random() * 20 + 80}%` }} />
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-primary text-[9px] font-black py-1 px-2 border border-primary/50 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono">
+                    LVL: {h}%
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between mt-2 text-xs text-muted-foreground font-mono">
-              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            <div className="flex justify-between mt-4 px-4 text-[10px] text-muted-foreground font-black font-mono tracking-widest uppercase border-t border-border/50 pt-2">
+              <span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span><span>20:00</span>
             </div>
           </CardContent>
         </Card>
