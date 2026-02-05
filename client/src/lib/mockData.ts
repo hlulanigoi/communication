@@ -1,4 +1,23 @@
-import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, MessageSquare, Shield, BarChart3, Search, Bell, LogOut, LayoutDashboard, Plus, CreditCard } from "lucide-react";
+import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, MessageSquare, Shield, BarChart3, Search, Bell, LogOut, LayoutDashboard, Plus, CreditCard, GraduationCap, Briefcase, UserRound, ClipboardList, Receipt } from "lucide-react";
+
+export const mockStaff = [
+  { id: "S-001", name: "Alex Miller", role: "Senior Technician", type: "Staff", status: "Active" },
+  { id: "S-002", name: "Sam Knight", role: "Electrician", type: "Staff", status: "Active" },
+  { id: "S-003", name: "Jordan Lee", role: "Junior Tech", type: "Student", placement: "Front-end Shop", status: "Active" },
+  { id: "S-004", name: "Taylor Reed", role: "Intern", type: "Intern", department: "Diagnostics", status: "Active" },
+];
+
+export const mockNotes = [
+  { id: 1, text: "Check RS6 parts arrival", author: "Admin", date: "2024-02-14" },
+  { id: 2, text: "Intern orientation @ 9AM", author: "HR Manager", date: "2024-02-15" },
+  { id: 3, text: "Update student placement docs", author: "HR Manager", date: "2024-02-15" },
+];
+
+export const mockMonthlyBills = [
+  { id: "B-2024-02-01", description: "Workshop Electricity", amount: 450.00, status: "Pending", category: "Utilities" },
+  { id: "B-2024-02-02", description: "Internet Fiber", amount: 85.00, status: "Paid", category: "Communication" },
+  { id: "B-2024-02-03", description: "Parts Supply Co", amount: 1200.00, status: "Due", category: "Inventory" },
+];
 
 export const mockVehicles = [
   { id: "V001", make: "Audi", model: "RS6 Avant", year: 2023, plate: "GH-928-KL", vin: "WAUZZZ4G8FN0...", status: "In Service", mileage: "12,450 km", owner: "Marcus Webb" },
@@ -45,13 +64,12 @@ export const stats = [
 
 export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Calendar, label: "Schedule", href: "/schedule" },
-  { icon: Car, label: "Vehicles", href: "/vehicles" },
+  { icon: GraduationCap, label: "Academy", href: "/academy" },
+  { icon: Users, label: "People", href: "/people" },
   { icon: Wrench, label: "Jobs", href: "/jobs" },
-  { icon: Users, label: "Clients", href: "/clients" },
-  { icon: Box, label: "Inventory", href: "/inventory" },
+  { icon: Car, label: "Vehicles", href: "/vehicles" },
   { icon: CreditCard, label: "Billing", href: "/billing" },
-  { icon: MessageSquare, label: "Messaging", href: "/communication" },
+  { icon: Receipt, label: "Admin Bills", href: "/admin-bills" },
+  { icon: Box, label: "Inventory", href: "/inventory" },
   { icon: Activity, label: "Analytics", href: "/analytics" },
-  { icon: Shield, label: "Admin", href: "/admin" },
 ];

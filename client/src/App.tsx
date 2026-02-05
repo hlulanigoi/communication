@@ -13,6 +13,9 @@ import Billing from "@/pages/Billing";
 import Communication from "@/pages/Communication";
 import Analytics from "@/pages/Analytics";
 
+import Academy from "@/pages/Academy";
+import AdminBills from "@/pages/AdminBills";
+
 function Router() {
   return (
     <Switch>
@@ -22,13 +25,15 @@ function Router() {
       <Route path="/inventory" component={Inventory} />
       <Route path="/clients" component={ClientDirectory} />
       <Route path="/billing" component={Billing} />
+      <Route path="/academy" component={Academy} />
+      <Route path="/admin-bills" component={AdminBills} />
       <Route path="/communication" component={Communication} />
       <Route path="/analytics" component={Analytics} />
       
       {/* Fallback routes for demos */}
+      <Route path="/people" component={ClientDirectory} />
       <Route path="/schedule" component={Dashboard} />
-      <Route path="/documents" component={Dashboard} />
-      <Route path="/admin" component={Dashboard} />
+      <Route path="/documents" component={Academy} />
       
       <Route component={NotFound} />
     </Switch>
