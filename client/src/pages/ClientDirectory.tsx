@@ -143,10 +143,10 @@ export default function ClientDirectory() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${client.type === 'Insurance' ? 'bg-primary animate-pulse' : 'bg-muted-foreground/30'}`} />
-                      <span className="text-xs font-bold uppercase tracking-tighter">{client.source}</span>
-                    </div>
-                  </TableCell>
+                        <div className={`w-1.5 h-1.5 rounded-full ${client.type === 'Insurance' ? 'bg-primary animate-pulse' : 'bg-muted-foreground/30'}`} />
+                        <span className="text-xs font-bold uppercase tracking-tighter">{client.source}</span>
+                      </div>
+                    </TableCell>
                   <TableCell className="font-mono text-sm">{client.vehicles}</TableCell>
                   <TableCell>
                     <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20">

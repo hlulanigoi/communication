@@ -3,20 +3,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Send, Users, Hash, Phone, Video } from "lucide-react";
-import { useState } from "react";
+import { MessageSquare, Send, Users, Hash, Phone, Video, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { getHRNotes, getStaff } from "@/lib/api";
+import type { HRNote, Staff } from "@shared/schema";
 
 const channels = ["announcements", "workshop-floor", "parts-procurement", "service-advisors"];
-const contacts = [
-  { name: "Alex Miller", role: "Lead Mechanic", status: "online" },
-  { name: "Sam Knight", role: "Service Advisor", status: "online" },
-  { name: "Jessica Low", role: "Inventory", status: "away" },
-  { name: "Admin (You)", role: "Manager", status: "online" }
-];
 
 export default function Communication() {
   const [activeChannel, setActiveChannel] = useState("workshop-floor");
+  const [notes, setNotes] = useState<HRNote[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [notesData, staffData] = await Promise.all([
+          getHRNotes(),
+          getStaff()
+        ]);
+        setNotes(notesData);
+        setStaff(staffData.slice(0, 4));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const contacts = staff.length > 0 ? staff.map(s => ({
+    name: s.name,
+    role: s.role || 'Staff',
+    status: 'online' as const
+  })) : [
+    { name: "Loading...", role: "Please wait", status: "online" as const }
+  ];
 
   return (
     <Layout>
@@ -98,52 +125,49 @@ export default function Communication() {
             </CardHeader>
 
             <CardContent className="flex-1 overflow-y-auto p-4 space-y-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback>AM</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col gap-1 max-w-[80%]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-semibold text-sm">Alex Miller</span>
-                      <span className="text-[10px] text-muted-foreground">10:45 AM</span>
+              {loading ? (
+                <div className="space-y-6">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex gap-3">
+                      <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted animate-pulse rounded w-32" />
+                        <div className="h-16 bg-muted animate-pulse rounded" />
+                      </div>
                     </div>
-                    <div className="bg-secondary/20 rounded-lg p-3 text-sm">
-                      Has anyone seen the diagnostic report for the RS6 (V001)? The intake manifold looks questionable.
-                    </div>
-                  </div>
+                  ))}
                 </div>
-
-                <div className="flex gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback>SK</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col gap-1 max-w-[80%]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-semibold text-sm">Sam Knight</span>
-                      <span className="text-[10px] text-muted-foreground">10:48 AM</span>
-                    </div>
-                    <div className="bg-secondary/20 rounded-lg p-3 text-sm">
-                      Just uploaded it to the vehicle documents. Marcus (the owner) is asking for an update by noon.
-                    </div>
-                  </div>
+              ) : error ? (
+                <div className="flex gap-3 items-start p-4 bg-rose-500/10 border border-rose-500/20 rounded">
+                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-600">{error}</p>
                 </div>
-
-                <div className="flex flex-row-reverse gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback>AD</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col gap-1 items-end max-w-[80%]">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[10px] text-muted-foreground">10:50 AM</span>
-                      <span className="font-semibold text-sm">Admin</span>
+              ) : notes.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">No messages in {activeChannel}</div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {notes.slice(0, 3).map((note, i) => (
+                    <div key={i} className={`flex ${i === notes.length - 1 ? 'flex-row-reverse' : ''} gap-3`}>
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback>{note.author.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className={`flex flex-col gap-1 max-w-[80%] ${i === notes.length - 1 ? 'items-end' : ''}`}>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold text-sm">{note.author}</span>
+                          <span className="text-[10px] text-muted-foreground">{new Date(note.createdAt).toLocaleTimeString()}</span>
+                        </div>
+                        <div className={`rounded-lg p-3 text-sm ${
+                          i === notes.length - 1 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary/20'
+                        }`}>
+                          {note.content}
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-primary text-primary-foreground rounded-lg p-3 text-sm">
-                      I'll review the report now. Alex, please hold off on ordering parts until I confirm the quote with Finance.
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </CardContent>
 
             <div className="p-4 border-t border-border/50">
