@@ -1,12 +1,91 @@
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
-import { stats, mockVehicles, mockJobs } from "@/lib/mockData";
+import { mockVehicles, mockJobs } from "@/lib/mockData";
+import { getStudents, getStaff, getInvoices } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus } from "lucide-react";
+import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle } from "lucide-react";
+import type { Student, Staff, JobInvoice } from "@shared/schema";
 
 export default function Dashboard() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [invoices, setInvoices] = useState<JobInvoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setError(null);
+        setLoading(true);
+        const [studentsData, staffData, invoicesData] = await Promise.all([
+          getStudents(),
+          getStaff(),
+          getInvoices(),
+        ]);
+        setStudents(studentsData);
+        setStaff(staffData);
+        setInvoices(invoicesData);
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Calculate stats from real data
+  const stats = [
+    { 
+      label: "Active Students", 
+      value: students.filter(s => s.status === 'Active').length.toString(), 
+      change: "+2", 
+      icon: AlertTriangle, 
+      color: "text-blue-500" 
+    },
+    { 
+      label: "Staff Members", 
+      value: staff.length.toString(), 
+      change: "+1", 
+      icon: ArrowUpRight, 
+      color: "text-amber-500" 
+    },
+    { 
+      label: "Total Invoices", 
+      value: invoices.length.toString(), 
+      change: `+${invoices.filter(i => i.createdAt && new Date(i.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}`, 
+      icon: AlertTriangle, 
+      color: "text-emerald-500" 
+    },
+    { 
+      label: "Pending Invoices", 
+      value: invoices.filter(i => !i.createdAt || i.createdAt).length.toString(), 
+      change: "0", 
+      icon: AlertTriangle, 
+      color: "text-rose-500" 
+    },
+  ];
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive rounded-lg">
+          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+          <div>
+            <p className="font-semibold">Error loading dashboard</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       {/* Header Section */}
@@ -38,13 +117,19 @@ export default function Dashboard() {
               <stat.icon className={`h-4 w-4 ${stat.color} opacity-80`} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-black font-display text-glow-red">{stat.value}</div>
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
-                <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
-                  {stat.change}
-                </span>
-                VS PREV PERIOD
-              </p>
+              {loading ? (
+                <div className="h-8 bg-secondary/10 animate-pulse rounded" />
+              ) : (
+                <>
+                  <div className="text-3xl font-black font-display text-glow-red">{stat.value}</div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
+                    <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
+                      {stat.change}
+                    </span>
+                    VS PREV PERIOD
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -85,30 +170,42 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter">Manage Queue</Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {mockJobs.slice(0, 4).map((job) => (
-                <div key={job.id} className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all">
-                  <div className={`mt-1 p-1.5 ${
-                    job.priority === 'High' ? 'bg-primary text-primary-foreground' : 
-                    job.priority === 'Medium' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
-                  }`}>
-                    {job.priority === 'High' ? <AlertTriangle className="w-3.5 h-3.5" /> : 
-                     job.priority === 'Medium' ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold leading-tight truncate uppercase tracking-tight">{job.description}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5">{job.id}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{job.vehicleId}</span>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-20 bg-secondary/10 animate-pulse rounded" />
+                ))}
+              </div>
+            ) : mockJobs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No active jobs</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {mockJobs.slice(0, 4).map((job) => (
+                  <div key={job.id} className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all">
+                    <div className={`mt-1 p-1.5 ${
+                      job.priority === 'High' ? 'bg-primary text-primary-foreground' : 
+                      job.priority === 'Medium' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
+                    }`}>
+                      {job.priority === 'High' ? <AlertTriangle className="w-3.5 h-3.5" /> : 
+                       job.priority === 'Medium' ? <Clock className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold leading-tight truncate uppercase tracking-tight">{job.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5">{job.id}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{job.vehicleId}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-black text-foreground block uppercase">{job.assignedTo}</span>
+                      <span className="text-[9px] text-primary font-bold uppercase">{job.status}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-black text-foreground block uppercase">{job.assignedTo}</span>
-                    <span className="text-[9px] text-primary font-bold uppercase">{job.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -121,29 +218,37 @@ export default function Dashboard() {
             <CardDescription>Vehicles currently on premises.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {mockVehicles.slice(0, 3).map((vehicle) => (
-                <div key={vehicle.id} className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-md bg-secondary/50 flex items-center justify-center">
-                      <span className="font-bold text-xs font-display">{vehicle.make.substring(0,2)}</span>
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-16 bg-secondary/10 animate-pulse rounded" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {mockVehicles.slice(0, 3).map((vehicle) => (
+                  <div key={vehicle.id} className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-md bg-secondary/50 flex items-center justify-center">
+                        <span className="font-bold text-xs font-display">{vehicle.make.substring(0,2)}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{vehicle.vin}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{vehicle.year} {vehicle.make} {vehicle.model}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{vehicle.vin}</p>
+                    <div className="flex items-center gap-4">
+                      <Badge variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} className="capitalize">
+                        {vehicle.status}
+                      </Badge>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} className="capitalize">
-                      {vehicle.status}
-                    </Badge>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
