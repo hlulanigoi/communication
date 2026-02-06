@@ -16,6 +16,9 @@ import Analytics from "@/pages/Analytics";
 import Academy from "@/pages/Academy";
 import AdminBills from "@/pages/AdminBills";
 
+import DVI from "@/pages/DVI";
+import DocumentCenter from "@/pages/DocumentCenter";
+
 function Router() {
   return (
     <Switch>
@@ -27,13 +30,14 @@ function Router() {
       <Route path="/billing" component={Billing} />
       <Route path="/academy" component={Academy} />
       <Route path="/admin-bills" component={AdminBills} />
+      <Route path="/dvi" component={DVI} />
+      <Route path="/documents" component={DocumentCenter} />
       <Route path="/communication" component={Communication} />
       <Route path="/analytics" component={Analytics} />
       
       {/* Fallback routes for demos */}
       <Route path="/people" component={ClientDirectory} />
       <Route path="/schedule" component={Dashboard} />
-      <Route path="/documents" component={Academy} />
       
       <Route component={NotFound} />
     </Switch>

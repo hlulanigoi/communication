@@ -64,6 +64,8 @@ export const stats = [
 
 export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: ClipboardList, label: "Inspections", href: "/dvi" },
+  { icon: FileText, label: "Documents", href: "/documents" },
   { icon: GraduationCap, label: "Academy", href: "/academy" },
   { icon: Users, label: "People", href: "/people" },
   { icon: Wrench, label: "Jobs", href: "/jobs" },
