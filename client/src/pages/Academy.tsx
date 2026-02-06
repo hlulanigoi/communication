@@ -3,7 +3,7 @@ import { mockStaff } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Star, UserPlus, GraduationCap, Users, UserRound } from "lucide-react";
+import { FileText, Download, Star, UserPlus, GraduationCap, Users, UserRound, CheckCircle2, Save } from "lucide-react";
 
 export default function Academy() {
   const students = mockStaff.filter(s => s.type === 'Student' || s.type === 'Intern');
@@ -29,7 +29,7 @@ export default function Academy() {
           <CardHeader className="bg-muted/30 border-b border-border/50">
             <CardTitle className="text-sm flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-primary" />
-              CURRENT PLACEMENTS
+              PRACTICAL TRAINING LOGS
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -37,15 +37,22 @@ export default function Academy() {
               {students.map((student) => (
                 <div key={student.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-secondary flex items-center justify-center font-bold text-xs uppercase italic">
-                      {student.name.split(' ').map(n => n[0]).join('')}
+                    <div className="w-10 h-10 bg-secondary flex items-center justify-center border-l-2 border-l-primary/30">
+                      <UserRound className="w-5 h-5 opacity-40" />
                     </div>
                     <div>
-                      <p className="font-bold text-sm uppercase tracking-tight">{student.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm uppercase tracking-tight">{student.name}</p>
+                        <Badge variant="outline" className="text-[9px] h-4 px-1 leading-none border-primary/20 text-primary font-black italic">PRACTICAL</Badge>
+                      </div>
                       <p className="text-[10px] text-muted-foreground font-mono">{student.role} • {student.type}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter hover:bg-emerald-500 hover:text-white border-emerald-500/30 text-emerald-600 bg-emerald-500/5">
+                      <Save className="w-3.5 h-3.5 mr-1.5" />
+                      Save Log
+                    </Button>
                     <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-tighter hover:bg-primary hover:text-white">
                       <FileText className="w-3.5 h-3.5 mr-1.5" />
                       Generate Docs
