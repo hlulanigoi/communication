@@ -1,13 +1,57 @@
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
-import { mockClients } from "@/lib/mockData";
+import { getClients } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Mail, Phone, MoreHorizontal, Building2, User, ShieldCheck } from "lucide-react";
+import { Search, Plus, Mail, Phone, MoreHorizontal, Building2, User, ShieldCheck, AlertCircle } from "lucide-react";
+import type { Client } from "@shared/schema";
 
 export default function ClientDirectory() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  const loadClients = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const data = await getClients();
+      setClients(data);
+    } catch (err) {
+      console.error("Failed to load clients:", err);
+      setError(err instanceof Error ? err.message : "Failed to load clients");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive rounded-lg">
+          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+          <div>
+            <p className="font-semibold">Error loading clients</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="flex flex-col gap-6">
@@ -25,7 +69,12 @@ export default function ClientDirectory() {
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by name, email, or company..." className="pl-10" />
+            <Input 
+              placeholder="Search by name, email, or company..." 
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <Button variant="outline">Filters</Button>
         </div>
@@ -38,46 +87,62 @@ export default function ClientDirectory() {
                 <TableHead>Contact Info</TableHead>
                 <TableHead>Account Type</TableHead>
                 <TableHead>Client Source</TableHead>
-                <TableHead>Vehicles</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockClients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-secondary flex items-center justify-center border-l-2 border-l-primary/30">
-                        {client.type === 'Corporate' ? <Building2 className="w-4 h-4" /> : 
-                         client.type === 'Insurance' ? <ShieldCheck className="w-4 h-4 text-primary" /> : 
-                         <User className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{client.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{client.id}</p>
-                      </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <div className="space-y-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="h-8 bg-secondary/10 animate-pulse rounded" />
+                      ))}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Mail className="w-3 h-3" />
-                        {client.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Phone className="w-3 h-3" />
-                        {client.phone}
-                      </div>
-                    </div>
+                </TableRow>
+              ) : filteredClients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    No clients found
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="font-normal uppercase text-[10px] tracking-tight">
-                      {client.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+                </TableRow>
+              ) : (
+                filteredClients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-secondary flex items-center justify-center border-l-2 border-l-primary/30">
+                          {client.source === 'Corporate Fleet' ? <Building2 className="w-4 h-4" /> : 
+                           client.source === 'Insurance' ? <ShieldCheck className="w-4 h-4 text-primary" /> : 
+                           <User className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{client.name}</p>
+                          <p className="text-xs text-muted-foreground font-mono">{client.id}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Mail className="w-3 h-3" />
+                          {client.email}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Phone className="w-3 h-3" />
+                          {client.phone}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal uppercase text-[10px] tracking-tight">
+                        {client.accountType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
                       <div className={`w-1.5 h-1.5 rounded-full ${client.type === 'Insurance' ? 'bg-primary animate-pulse' : 'bg-muted-foreground/30'}`} />
                       <span className="text-xs font-bold uppercase tracking-tighter">{client.source}</span>
                     </div>
