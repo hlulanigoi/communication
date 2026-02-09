@@ -158,6 +158,7 @@ export class MemStorage implements IStorage {
   private vehicles: Map<string, Vehicle>;
   private vehicleInspections: Map<string, VehicleInspection>;
   private inspectionMedia: Map<string, InspectionMedia>;
+  private jobs: Map<string, Job>;
 
   constructor() {
     this.users = new Map();
