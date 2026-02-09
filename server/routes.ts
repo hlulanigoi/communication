@@ -136,6 +136,136 @@ export async function registerRoutes(
     }
   });
 
+  // Search documents
+  app.get("/api/documents/search/:query", async (req, res) => {
+    try {
+      const documents = await storage.searchDocuments(req.params.query);
+      // Sort by date, newest first
+      documents.sort((a, b) => {
+        const dateA = a.generatedDate ? new Date(a.generatedDate).getTime() : 0;
+        const dateB = b.generatedDate ? new Date(b.generatedDate).getTime() : 0;
+        return dateB - dateA;
+      });
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Filter documents
+  app.post("/api/documents/filter", async (req, res) => {
+    try {
+      const filters = req.body;
+      const documents = await storage.filterDocuments(filters);
+      // Sort by date, newest first
+      documents.sort((a, b) => {
+        const dateA = a.generatedDate ? new Date(a.generatedDate).getTime() : 0;
+        const dateB = b.generatedDate ? new Date(b.generatedDate).getTime() : 0;
+        return dateB - dateA;
+      });
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get documents by category
+  app.get("/api/documents/category/:category", async (req, res) => {
+    try {
+      const documents = await storage.getDocumentsByCategory(req.params.category);
+      documents.sort((a, b) => {
+        const dateA = a.generatedDate ? new Date(a.generatedDate).getTime() : 0;
+        const dateB = b.generatedDate ? new Date(b.generatedDate).getTime() : 0;
+        return dateB - dateA;
+      });
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Upload document
+  app.post("/api/documents/upload", async (req, res) => {
+    try {
+      const { 
+        title, 
+        type, 
+        category, 
+        fileType, 
+        fileName, 
+        fileSize, 
+        content, 
+        studentId, 
+        clientId, 
+        staffId,
+        description,
+        tags,
+        uploadedBy
+      } = req.body;
+
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+
+      // Get related names for denormalization
+      let studentName, clientName, staffName;
+      
+      if (studentId) {
+        const student = await storage.getStudent(studentId);
+        studentName = student?.name;
+      }
+      
+      if (clientId) {
+        const client = await storage.getClient(clientId);
+        clientName = client?.name;
+      }
+      
+      if (staffId) {
+        const staff = await storage.getStaffMember(staffId);
+        staffName = staff?.name;
+      }
+
+      const document = await storage.createDocument({
+        title,
+        type: type || 'Custom',
+        category: category || 'General',
+        fileType: fileType || 'application/pdf',
+        fileName: fileName || title,
+        fileSize: fileSize || '0',
+        content,
+        studentId: studentId || null,
+        clientId: clientId || null,
+        staffId: staffId || null,
+        studentName: studentName || null,
+        clientName: clientName || null,
+        staffName: staffName || null,
+        description: description || null,
+        tags: tags || null,
+        metadata: JSON.stringify({ uploadedAt: new Date() }),
+        uploadedBy: uploadedBy || 'System',
+        version: "1.0",
+      });
+
+      res.status(201).json(document);
+    } catch (error: any) {
+      console.error("Document upload error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update document
+  app.put("/api/documents/:id", async (req, res) => {
+    try {
+      const document = await storage.updateDocument(req.params.id, req.body);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      res.json(document);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
   // Delete document
   app.delete("/api/documents/:id", async (req, res) => {
     try {
@@ -144,6 +274,23 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Document not found" });
       }
       res.json({ message: "Document deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Bulk delete documents
+  app.post("/api/documents/bulk-delete", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Document IDs array is required" });
+      }
+      const deletedCount = await storage.bulkDeleteDocuments(ids);
+      res.json({ 
+        message: `${deletedCount} document(s) deleted successfully`,
+        deletedCount 
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
