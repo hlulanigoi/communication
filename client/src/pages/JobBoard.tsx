@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock, AlertCircle, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState, useMemo } from "react";
 
 const columns = [
   { id: "pending", label: "Pending Intake", color: "bg-slate-500/10 border-slate-500/20" },
@@ -22,6 +24,24 @@ const getStatusColumn = (status: string) => {
 };
 
 export default function JobBoard() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter jobs based on search query
+  const filteredJobs = useMemo(() => {
+    if (!searchQuery.trim()) return mockJobs;
+
+    const query = searchQuery.toLowerCase();
+    return mockJobs.filter(job =>
+      job.id.toLowerCase().includes(query) ||
+      job.description.toLowerCase().includes(query) ||
+      job.vehicleId.toLowerCase().includes(query) ||
+      job.type.toLowerCase().includes(query) ||
+      job.priority.toLowerCase().includes(query) ||
+      job.assignedTo.toLowerCase().includes(query) ||
+      job.date.includes(query)
+    );
+  }, [searchQuery]);
+
   return (
     <Layout>
        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -42,48 +62,81 @@ export default function JobBoard() {
         </div>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-220px)]">
+      {/* Search Bar */}
+      <div className="mb-4 flex items-center gap-2 bg-card p-2 rounded-lg border border-border">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search Job ID, Vehicle, Description, Technician..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 border-none bg-transparent focus-visible:ring-0"
+          />
+        </div>
+        {searchQuery && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSearchQuery("")}
+            className="h-8 w-8"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+
+      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-280px)]">
         {columns.map(col => (
           <div key={col.id} className="min-w-[300px] w-[300px] flex flex-col h-full">
             <div className={`p-3 rounded-t-lg border-x border-t ${col.color} mb-0 backdrop-blur-sm`}>
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-sm font-display uppercase tracking-wider">{col.label}</h3>
                 <Badge variant="secondary" className="bg-background/50 text-foreground font-mono text-[10px]">
-                  {mockJobs.filter(j => getStatusColumn(j.status) === col.id).length}
+                  {filteredJobs.filter(j => getStatusColumn(j.status) === col.id).length}
                 </Badge>
               </div>
             </div>
             <div className="flex-1 bg-secondary/5 border-x border-b border-border/50 rounded-b-lg p-2 space-y-3 overflow-y-auto">
-              {mockJobs.filter(j => getStatusColumn(j.status) === col.id).map(job => (
-                <Card key={job.id} className="cursor-pointer hover:border-primary/50 transition-colors shadow-sm bg-card">
-                  <CardContent className="p-3 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <Badge variant="outline" className="font-mono text-[10px] bg-muted/50">{job.id}</Badge>
-                      {job.priority === 'High' && (
-                        <Badge variant="destructive" className="text-[10px] py-0 px-1.5 h-4">High</Badge>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-sm text-foreground">{job.description}</h4>
-                      <p className="text-xs text-muted-foreground mt-1 font-display uppercase tracking-wide text-primary/80">{job.vehicleId}</p>
-                    </div>
+              {filteredJobs.filter(j => getStatusColumn(j.status) === col.id).length === 0 ? (
+                <div className="flex items-center justify-center h-20">
+                  <p className="text-xs text-muted-foreground text-center">
+                    {searchQuery ? "No jobs match your search" : "No jobs in this column"}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {filteredJobs.filter(j => getStatusColumn(j.status) === col.id).map(job => (
+                    <Card key={job.id} className="cursor-pointer hover:border-primary/50 transition-colors shadow-sm bg-card">
+                      <CardContent className="p-3 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="font-mono text-[10px] bg-muted/50">{job.id}</Badge>
+                          {job.priority === 'High' && (
+                            <Badge variant="destructive" className="text-[10px] py-0 px-1.5 h-4">High</Badge>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium text-sm text-foreground">{job.description}</h4>
+                          <p className="text-xs text-muted-foreground mt-1 font-display uppercase tracking-wide text-primary/80">{job.vehicleId}</p>
+                        </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Avatar className="w-5 h-5">
-                          <AvatarFallback className="text-[9px]">{job.assignedTo.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-[10px]">{job.assignedTo}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span className="text-[10px]">2d</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Avatar className="w-5 h-5">
+                              <AvatarFallback className="text-[9px]">{job.assignedTo.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-[10px]">{job.assignedTo}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span className="text-[10px]">2d</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              )}
               
               <Button variant="ghost" className="w-full text-xs text-muted-foreground border-2 border-dashed border-border hover:border-primary/50 hover:text-primary">
                 + Add Task

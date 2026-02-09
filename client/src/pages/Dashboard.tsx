@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
-import { mockVehicles, mockJobs } from "@/lib/mockData";
+import { mockVehicles, mockJobs, mockStaff } from "@/lib/mockData";
 import { getStudents, getStaff, getInvoices } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,28 +11,45 @@ import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCi
 import type { Student, Staff, JobInvoice } from "@shared/schema";
 
 export default function Dashboard() {
+  const [, setLocation] = useLocation();
   const [students, setStudents] = useState<Student[]>([]);
-  const [staff, setStaff] = useState<Staff[]>([]);
+  const [staff, setStaff] = useState<Staff[]>(mockStaff as Staff[]);
   const [invoices, setInvoices] = useState<JobInvoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setError(null);
         setLoading(true);
-        const [studentsData, staffData, invoicesData] = await Promise.all([
-          getStudents(),
-          getStaff(),
-          getInvoices(),
-        ]);
-        setStudents(studentsData);
-        setStaff(staffData);
-        setInvoices(invoicesData);
+        
+        // Fetch students
+        try {
+          const studentsData = await getStudents();
+          setStudents(studentsData);
+        } catch (err) {
+          console.error("Failed to load students, using fallback");
+          setStudents([]);
+        }
+        
+        // Fetch staff
+        try {
+          const staffData = await getStaff();
+          setStaff(staffData);
+        } catch (err) {
+          console.error("Failed to load staff, using mock data");
+          // Use mock data as fallback
+        }
+        
+        // Fetch invoices
+        try {
+          const invoicesData = await getInvoices();
+          setInvoices(invoicesData);
+        } catch (err) {
+          console.error("Failed to load invoices, using fallback");
+          setInvoices([]);
+        }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        console.error("Dashboard load error:", err);
       } finally {
         setLoading(false);
       }
@@ -65,26 +83,12 @@ export default function Dashboard() {
     },
     { 
       label: "Pending Invoices", 
-      value: invoices.filter(i => !i.createdAt || i.createdAt).length.toString(), 
+      value: invoices.filter(i => i.status === 'Pending').length.toString(), 
       change: "0", 
       icon: AlertTriangle, 
       color: "text-rose-500" 
     },
   ];
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive rounded-lg">
-          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
-          <div>
-            <p className="font-semibold">Error loading dashboard</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
@@ -167,7 +171,14 @@ export default function Dashboard() {
         <Card className="col-span-3 border-2 border-border/50">
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/20">
             <CardTitle className="text-sm">URGENT SERVICE TICKETS</CardTitle>
-            <Button variant="ghost" size="sm" className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter">Manage Queue</Button>
+            <Button 
+              onClick={() => setLocation('/job-board')}
+              variant="ghost" 
+              size="sm" 
+              className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter"
+            >
+              Manage Queue
+            </Button>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -183,7 +194,11 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {mockJobs.slice(0, 4).map((job) => (
-                  <div key={job.id} className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all">
+                  <div 
+                    key={job.id} 
+                    onClick={() => setLocation('/job-board')}
+                    className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all cursor-pointer rounded"
+                  >
                     <div className={`mt-1 p-1.5 ${
                       job.priority === 'High' ? 'bg-primary text-primary-foreground' : 
                       job.priority === 'Medium' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
@@ -227,7 +242,11 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 {mockVehicles.slice(0, 3).map((vehicle) => (
-                  <div key={vehicle.id} className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0">
+                  <div 
+                    key={vehicle.id} 
+                    onClick={() => setLocation('/vehicle-list')}
+                    className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0 cursor-pointer hover:bg-secondary/10 p-2 -m-2 rounded transition-colors"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-md bg-secondary/50 flex items-center justify-center">
                         <span className="font-bold text-xs font-display">{vehicle.make.substring(0,2)}</span>
@@ -241,7 +260,7 @@ export default function Dashboard() {
                       <Badge variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} className="capitalize">
                         {vehicle.status}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10">
                         <ArrowRight className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </div>
@@ -258,16 +277,20 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
              {[
-               "Scan VIN / Plate",
-               "Create Invoice",
-               "Lookup Part",
-               "Schedule Appointment"
-             ].map((action, i) => (
-               <Button key={i} variant="outline" className="w-full justify-start text-left bg-background/50 hover:bg-primary hover:text-primary-foreground border-border hover:border-primary transition-all group font-bold text-xs uppercase italic tracking-tighter">
+               { label: "Scan VIN / Plate", action: () => setLocation("/vehicle-list") },
+               { label: "Create Invoice", action: () => setLocation("/billing") },
+               { label: "Lookup Part", action: () => setLocation("/inventory") },
+               { label: "Schedule Appointment", action: () => setLocation("/job-board") }
+             ].map(({ label, action }, i) => (
+               <Button 
+                 key={i} 
+                 onClick={action}
+                 variant="outline" 
+                 className="w-full justify-start text-left bg-background/50 hover:bg-primary hover:text-primary-foreground border-border hover:border-primary transition-all group font-bold text-xs uppercase italic tracking-tighter">
                  <div className="w-5 h-5 bg-muted flex items-center justify-center mr-3 group-hover:bg-primary-foreground group-hover:text-primary transition-colors">
                     <Plus className="w-3 h-3" />
                  </div>
-                 {action}
+                 {label}
                </Button>
              ))}
           </CardContent>

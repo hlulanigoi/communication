@@ -89,7 +89,7 @@ export default function AdminBills() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-black font-display text-primary">${(exp.amount || 0).toFixed(2)}</p>
+                          <p className="text-lg font-black font-display text-primary">${(parseFloat(exp.amount as any) || 0).toFixed(2)}</p>
                           <Badge className={`text-[9px] font-black uppercase ${
                             exp.status === 'Paid' ? 'bg-emerald-500' : 'bg-primary'
                           }`}>

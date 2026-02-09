@@ -6,9 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { Search, Filter, Plus, AlertCircle, Package } from "lucide-react";
+import { Search, Filter, Plus, AlertCircle, Package, X } from "lucide-react";
+import { useState, useMemo } from "react";
 
 export default function Inventory() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter inventory based on search query
+  const filteredInventory = useMemo(() => {
+    if (!searchQuery.trim()) return mockInventory;
+
+    const query = searchQuery.toLowerCase();
+    return mockInventory.filter(item =>
+      item.name.toLowerCase().includes(query) ||
+      item.sku.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      item.location.toLowerCase().includes(query) ||
+      item.id.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
   return (
     <Layout>
       <div className="flex flex-col gap-4">
@@ -36,10 +53,22 @@ export default function Inventory() {
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Search SKU, Part Name, Category..." 
+                    placeholder="Search SKU, Part Name, Category, Location..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9" 
                   />
                 </div>
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSearchQuery("")}
+                    className="h-8 w-8"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button variant="outline" size="icon">
                   <Filter className="w-4 h-4" />
                 </Button>
@@ -49,7 +78,9 @@ export default function Inventory() {
             <div className="p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-destructive">Low Stock Alerts</p>
-                <p className="text-2xl font-bold font-display text-destructive">3</p>
+                <p className="text-2xl font-bold font-display text-destructive">
+                  {filteredInventory.filter(item => item.stock <= item.minStock).length}
+                </p>
               </div>
               <AlertCircle className="w-8 h-8 text-destructive/50" />
             </div>
@@ -69,51 +100,64 @@ export default function Inventory() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockInventory.map((item) => {
-                const stockPercent = Math.min(100, (item.stock / (item.minStock * 3)) * 100);
-                const isLowStock = item.stock <= item.minStock;
+              {filteredInventory.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-8 h-8 text-muted-foreground/50" />
+                      <p className="text-muted-foreground">
+                        {searchQuery ? "No parts match your search" : "No parts found"}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredInventory.map((item) => {
+                  const stockPercent = Math.min(100, (item.stock / (item.minStock * 3)) * 100);
+                  const isLowStock = item.stock <= item.minStock;
 
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">{item.sku}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="font-normal">{item.category}</Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
-                      {item.location}
-                    </TableCell>
-                    <TableCell className="w-[200px]">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex justify-between text-xs">
-                          <span className={isLowStock ? "text-destructive font-bold" : "text-muted-foreground"}>
-                            {item.stock} units
-                          </span>
-                          <span className="text-muted-foreground/50">Target: {item.minStock * 3}</span>
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{item.sku}</span>
                         </div>
-                        <Progress 
-                          value={stockPercent} 
-                          className={`h-1.5 ${isLowStock ? "bg-destructive/20 [&>div]:bg-destructive" : ""}`} 
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      ${item.price.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       {isLowStock ? (
-                         <Badge variant="destructive" className="h-6 text-[10px]">REORDER</Badge>
-                       ) : (
-                         <Badge variant="outline" className="h-6 text-[10px] text-emerald-500 border-emerald-500/20 bg-emerald-500/5">IN STOCK</Badge>
-                       )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-normal">{item.category}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {item.location}
+                      </TableCell>
+                      <TableCell className="w-[200px]">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex justify-between text-xs">
+                            <span className={isLowStock ? "text-destructive font-bold" : "text-muted-foreground"}>
+                              {item.stock} units
+                            </span>
+                            <span className="text-muted-foreground/50">Target: {item.minStock * 3}</span>
+                          </div>
+                          <Progress 
+                            value={stockPercent} 
+                            className={`h-1.5 ${isLowStock ? "bg-destructive/20 [&>div]:bg-destructive" : ""}`} 
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        ${item.price.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                         {isLowStock ? (
+                           <Badge variant="destructive" className="h-6 text-[10px]">REORDER</Badge>
+                         ) : (
+                           <Badge variant="outline" className="h-6 text-[10px] text-emerald-500 border-emerald-500/20 bg-emerald-500/5">IN STOCK</Badge>
+                         )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </Card>

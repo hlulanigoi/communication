@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, CreditCard, Download, ExternalLink, Filter, TrendingUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { AlertCircle, CreditCard, Download, ExternalLink, Filter, TrendingUp, Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect, useMemo } from "react";
 import { getInvoices } from "@/lib/api";
 import type { JobInvoice } from "@shared/schema";
 
@@ -12,6 +13,7 @@ export default function Billing() {
   const [invoices, setInvoices] = useState<JobInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadInvoices = async () => {
@@ -27,6 +29,19 @@ export default function Billing() {
     };
     loadInvoices();
   }, []);
+
+  // Filter invoices based on search query
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery.trim()) return invoices;
+
+    const query = searchQuery.toLowerCase();
+    return invoices.filter(inv =>
+      inv.id.toLowerCase().includes(query) ||
+      (inv.studentId && inv.studentId.toLowerCase().includes(query)) ||
+      inv.status.toLowerCase().includes(query) ||
+      (inv.amount && inv.amount.toString().includes(query))
+    );
+  }, [invoices, searchQuery]);
 
   const totalOutstanding = invoices
     .filter(inv => inv.status !== 'Paid')
@@ -105,12 +120,32 @@ export default function Billing() {
         </div>
 
         <Card>
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h3 className="font-semibold font-display uppercase tracking-wider text-sm">Recent Transactions</h3>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="w-3 h-3" />
-              Filter
-            </Button>
+            <div className="flex items-center gap-2 flex-1 sm:flex-none sm:max-w-sm">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search Invoice ID, Client, Status..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSearchQuery("")}
+                  className="h-9 w-9"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <Filter className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
           <Table>
             <TableHeader>
@@ -137,14 +172,19 @@ export default function Billing() {
                     <TableCell><div className="h-4 bg-muted animate-pulse rounded" /></TableCell>
                   </TableRow>
                 ))
-              ) : invoices.length === 0 ? (
+              ) : filteredInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No invoices found
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-8 h-8 text-muted-foreground/50" />
+                      <p className="text-muted-foreground">
+                        {searchQuery ? "No invoices match your search" : "No invoices found"}
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                invoices.map((inv) => (
+                filteredInvoices.map((inv) => (
                   <TableRow key={inv.id}>
                     <TableCell className="font-mono text-xs">{inv.id.slice(0, 8)}</TableCell>
                     <TableCell className="font-medium">{inv.studentId ? `Student ${inv.studentId.slice(0, 8)}` : 'N/A'}</TableCell>

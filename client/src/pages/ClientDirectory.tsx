@@ -87,6 +87,7 @@ export default function ClientDirectory() {
                 <TableHead>Contact Info</TableHead>
                 <TableHead>Account Type</TableHead>
                 <TableHead>Client Source</TableHead>
+                <TableHead>Vehicles</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -94,7 +95,7 @@ export default function ClientDirectory() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <div className="space-y-2">
                       {[...Array(3)].map((_, i) => (
                         <div key={i} className="h-8 bg-secondary/10 animate-pulse rounded" />
@@ -104,7 +105,7 @@ export default function ClientDirectory() {
                 </TableRow>
               ) : filteredClients.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No clients found
                   </TableCell>
                 </TableRow>
@@ -147,19 +148,20 @@ export default function ClientDirectory() {
                         <span className="text-xs font-bold uppercase tracking-tighter">{client.source}</span>
                       </div>
                     </TableCell>
-                  <TableCell className="font-mono text-sm">{client.vehicles}</TableCell>
-                  <TableCell>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20">
-                      {client.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell className="font-mono text-sm">{client.vehicles}</TableCell>
+                    <TableCell>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20">
+                        {client.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Card>
