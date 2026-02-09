@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { navItems } from "@/lib/mockData";
-import { Bell, Search, Settings, Menu, X, User, CheckCircle2, AlertCircle, Info, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Bell, Search, Settings, Menu, X, User, CheckCircle2, AlertCircle, Info, Trash2, Sun, Moon } from "lucide-react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, type: 'success', title: 'Invoice Created', message: 'Invoice INV-2024-001 has been created successfully.', timestamp: '2 mins ago' },
@@ -109,6 +127,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               />
             </div>
             
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative text-muted-foreground hover:text-foreground"
+              onClick={toggleTheme}
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </Button>
+
             <Button 
               variant="ghost" 
               size="icon" 
