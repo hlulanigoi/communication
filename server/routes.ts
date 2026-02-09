@@ -421,13 +421,29 @@ export async function registerRoutes(
         summary: summary || "",
       });
 
-      // Save document
+      // Save document with enhanced schema
       const document = await storage.createDocument({
         title: `Compliance Report - ${reportType}`,
         type: "Compliance",
+        category: "General",
+        fileType: "application/pdf",
+        fileName: `Compliance_Report_${reportType.replace(/\s+/g, '_')}.pdf`,
+        fileSize: Math.ceil(pdfBase64.length * 0.75).toString(),
         studentId: null,
-        studentName: "Admin",
+        clientId: null,
+        staffId: null,
+        studentName: null,
+        clientName: null,
+        staffName: null,
         content: pdfBase64,
+        metadata: JSON.stringify({ reportType, dateRange: dateRange || defaultDateRange }),
+        tags: JSON.stringify(['compliance', 'report', 'audit']),
+        description: `Compliance audit report: ${reportType}`,
+        uploadedBy: "System",
+        version: "1.0",
+      });
+
+      res.status(201).json(document);
         metadata: JSON.stringify({ reportType, dateRange: dateRange || defaultDateRange }),
       });
 
