@@ -12,6 +12,7 @@ import {
   type Vehicle, type InsertVehicle,
   type VehicleInspection, type InsertVehicleInspection,
   type InspectionMedia, type InsertInspectionMedia,
+  type Job, type InsertJob,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
