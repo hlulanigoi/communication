@@ -591,3 +591,137 @@ export async function runScheduledTasks(): Promise<{ tasksRun: number; message: 
   if (!res.ok) throw new Error('Failed to run scheduled tasks');
   return res.json();
 }
+
+// ============ VEHICLES API ============
+
+export async function getVehicles(): Promise<Vehicle[]> {
+  const res = await fetch(`${API_BASE}/vehicles`);
+  if (!res.ok) throw new Error('Failed to fetch vehicles');
+  return res.json();
+}
+
+export async function getVehicle(id: string): Promise<Vehicle> {
+  const res = await fetch(`${API_BASE}/vehicles/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch vehicle');
+  return res.json();
+}
+
+export async function getVehiclesByClient(clientId: string): Promise<Vehicle[]> {
+  const res = await fetch(`${API_BASE}/vehicles/by-client/${clientId}`);
+  if (!res.ok) throw new Error('Failed to fetch client vehicles');
+  return res.json();
+}
+
+export async function createVehicle(vehicle: Partial<Vehicle>): Promise<Vehicle> {
+  const res = await fetch(`${API_BASE}/vehicles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(vehicle),
+  });
+  if (!res.ok) throw new Error('Failed to create vehicle');
+  return res.json();
+}
+
+export async function updateVehicle(id: string, vehicle: Partial<Vehicle>): Promise<Vehicle> {
+  const res = await fetch(`${API_BASE}/vehicles/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(vehicle),
+  });
+  if (!res.ok) throw new Error('Failed to update vehicle');
+  return res.json();
+}
+
+export async function deleteVehicle(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/vehicles/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete vehicle');
+}
+
+// ============ VEHICLE INSPECTIONS API ============
+
+export async function getVehicleInspections(): Promise<VehicleInspection[]> {
+  const res = await fetch(`${API_BASE}/inspections`);
+  if (!res.ok) throw new Error('Failed to fetch inspections');
+  return res.json();
+}
+
+export async function getVehicleInspection(id: string): Promise<VehicleInspection> {
+  const res = await fetch(`${API_BASE}/inspections/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch inspection');
+  return res.json();
+}
+
+export async function getInspectionsByVehicle(vehicleId: string): Promise<VehicleInspection[]> {
+  const res = await fetch(`${API_BASE}/inspections/by-vehicle/${vehicleId}`);
+  if (!res.ok) throw new Error('Failed to fetch vehicle inspections');
+  return res.json();
+}
+
+export async function getInspectionsByStatus(status: string): Promise<VehicleInspection[]> {
+  const res = await fetch(`${API_BASE}/inspections/by-status/${status}`);
+  if (!res.ok) throw new Error('Failed to fetch inspections by status');
+  return res.json();
+}
+
+export async function createVehicleInspection(inspection: Partial<VehicleInspection>): Promise<VehicleInspection> {
+  const res = await fetch(`${API_BASE}/inspections`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(inspection),
+  });
+  if (!res.ok) throw new Error('Failed to create inspection');
+  return res.json();
+}
+
+export async function updateVehicleInspection(id: string, inspection: Partial<VehicleInspection>): Promise<VehicleInspection> {
+  const res = await fetch(`${API_BASE}/inspections/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(inspection),
+  });
+  if (!res.ok) throw new Error('Failed to update inspection');
+  return res.json();
+}
+
+export async function deleteVehicleInspection(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/inspections/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete inspection');
+}
+
+export async function sendInspectionToClient(id: string): Promise<{ success: boolean; message: string; sentDate: Date }> {
+  const res = await fetch(`${API_BASE}/inspections/${id}/send-to-client`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) throw new Error('Failed to send inspection to client');
+  return res.json();
+}
+
+// ============ INSPECTION MEDIA API ============
+
+export async function getInspectionMedia(inspectionId: string): Promise<InspectionMedia[]> {
+  const res = await fetch(`${API_BASE}/inspections/${inspectionId}/media`);
+  if (!res.ok) throw new Error('Failed to fetch inspection media');
+  return res.json();
+}
+
+export async function createInspectionMedia(inspectionId: string, media: Partial<InspectionMedia>): Promise<InspectionMedia> {
+  const res = await fetch(`${API_BASE}/inspections/${inspectionId}/media`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(media),
+  });
+  if (!res.ok) throw new Error('Failed to upload inspection media');
+  return res.json();
+}
+
+export async function deleteInspectionMedia(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/inspections/media/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete inspection media');
+}
