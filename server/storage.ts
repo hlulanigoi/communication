@@ -376,6 +376,70 @@ export class MemStorage implements IStorage {
     return this.documents.get(id);
   }
 
+  async searchDocuments(query: string): Promise<Document[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.documents.values()).filter(doc => 
+      doc.title.toLowerCase().includes(lowerQuery) ||
+      (doc.description && doc.description.toLowerCase().includes(lowerQuery)) ||
+      (doc.studentName && doc.studentName.toLowerCase().includes(lowerQuery)) ||
+      (doc.clientName && doc.clientName.toLowerCase().includes(lowerQuery)) ||
+      (doc.staffName && doc.staffName.toLowerCase().includes(lowerQuery)) ||
+      (doc.tags && doc.tags.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  async filterDocuments(filters: {
+    type?: string;
+    category?: string;
+    startDate?: Date;
+    endDate?: Date;
+    studentId?: string;
+    clientId?: string;
+    staffId?: string;
+  }): Promise<Document[]> {
+    let docs = Array.from(this.documents.values());
+
+    if (filters.type) {
+      docs = docs.filter(doc => doc.type === filters.type);
+    }
+
+    if (filters.category) {
+      docs = docs.filter(doc => doc.category === filters.category);
+    }
+
+    if (filters.studentId) {
+      docs = docs.filter(doc => doc.studentId === filters.studentId);
+    }
+
+    if (filters.clientId) {
+      docs = docs.filter(doc => doc.clientId === filters.clientId);
+    }
+
+    if (filters.staffId) {
+      docs = docs.filter(doc => doc.staffId === filters.staffId);
+    }
+
+    if (filters.startDate) {
+      docs = docs.filter(doc => {
+        const docDate = doc.generatedDate ? new Date(doc.generatedDate) : null;
+        return docDate && docDate >= filters.startDate!;
+      });
+    }
+
+    if (filters.endDate) {
+      docs = docs.filter(doc => {
+        const docDate = doc.generatedDate ? new Date(doc.generatedDate) : null;
+        return docDate && docDate <= filters.endDate!;
+      });
+    }
+
+    return docs;
+  }
+
+  async getDocumentsByCategory(category: string): Promise<Document[]> {
+    return Array.from(this.documents.values()).filter(doc => doc.category === category);
+  }
+
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
     const id = randomUUID();
     const document: Document = {
@@ -383,13 +447,38 @@ export class MemStorage implements IStorage {
       id,
       generatedDate: new Date(),
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.documents.set(id, document);
     return document;
   }
 
+  async updateDocument(id: string, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
+    const existing = this.documents.get(id);
+    if (!existing) return undefined;
+
+    const updated: Document = {
+      ...existing,
+      ...updateData,
+      id, // Preserve ID
+      updatedAt: new Date(),
+    };
+    this.documents.set(id, updated);
+    return updated;
+  }
+
   async deleteDocument(id: string): Promise<boolean> {
     return this.documents.delete(id);
+  }
+
+  async bulkDeleteDocuments(ids: string[]): Promise<number> {
+    let deleted = 0;
+    for (const id of ids) {
+      if (this.documents.delete(id)) {
+        deleted++;
+      }
+    }
+    return deleted;
   }
 
   // ============ STAFF METHODS ============
