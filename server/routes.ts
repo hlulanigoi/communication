@@ -1310,5 +1310,772 @@ export async function registerRoutes(
     }
   });
 
+  // ============ SUPPLIERS ROUTES ============
+
+  app.get("/api/suppliers", async (_req, res) => {
+    try {
+      const suppliers = await storage.getSuppliers();
+      res.json(suppliers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/suppliers/:id", async (req, res) => {
+    try {
+      const supplier = await storage.getSupplier(req.params.id);
+      if (!supplier) {
+        return res.status(404).json({ message: "Supplier not found" });
+      }
+      res.json(supplier);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/suppliers/by-status/:status", async (req, res) => {
+    try {
+      const suppliers = await storage.getSuppliersByStatus(req.params.status);
+      res.json(suppliers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/suppliers", async (req, res) => {
+    try {
+      const supplier = await storage.createSupplier(req.body);
+      res.status(201).json(supplier);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/suppliers/:id", async (req, res) => {
+    try {
+      const supplier = await storage.updateSupplier(req.params.id, req.body);
+      if (!supplier) {
+        return res.status(404).json({ message: "Supplier not found" });
+      }
+      res.json(supplier);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/suppliers/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteSupplier(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Supplier not found" });
+      }
+      res.json({ message: "Supplier deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ INVENTORY ITEMS ROUTES ============
+
+  app.get("/api/inventory", async (_req, res) => {
+    try {
+      const items = await storage.getInventoryItems();
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory/low-stock", async (_req, res) => {
+    try {
+      const items = await storage.getLowStockItems();
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory/search/:query", async (req, res) => {
+    try {
+      const items = await storage.searchInventoryItems(req.params.query);
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory/category/:category", async (req, res) => {
+    try {
+      const items = await storage.getInventoryItemsByCategory(req.params.category);
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory/supplier/:supplierId", async (req, res) => {
+    try {
+      const items = await storage.getInventoryItemsBySupplier(req.params.supplierId);
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory/:id", async (req, res) => {
+    try {
+      const item = await storage.getInventoryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+      res.json(item);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/inventory", async (req, res) => {
+    try {
+      const item = await storage.createInventoryItem(req.body);
+      res.status(201).json(item);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/inventory/:id", async (req, res) => {
+    try {
+      const item = await storage.updateInventoryItem(req.params.id, req.body);
+      if (!item) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+      res.json(item);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/inventory/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteInventoryItem(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+      res.json({ message: "Inventory item deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update stock (add or subtract)
+  app.post("/api/inventory/:id/stock", async (req, res) => {
+    try {
+      const { quantity, type, performedBy, reason, notes } = req.body;
+      
+      if (!quantity || !type || !performedBy) {
+        return res.status(400).json({ 
+          message: "quantity, type, and performedBy are required" 
+        });
+      }
+
+      const item = await storage.getInventoryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+
+      const quantityBefore = item.stock;
+      const updatedItem = await storage.updateItemStock(req.params.id, quantity, type);
+      
+      if (!updatedItem) {
+        return res.status(500).json({ message: "Failed to update stock" });
+      }
+
+      // Create transaction record
+      await storage.createInventoryTransaction({
+        itemId: item.id,
+        itemName: item.name,
+        itemSku: item.sku,
+        type: type === 'add' ? 'purchase' : 'adjustment',
+        quantity: type === 'add' ? quantity : `-${quantity}`,
+        quantityBefore,
+        quantityAfter: updatedItem.stock,
+        unitCost: item.costPrice,
+        totalCost: (parseFloat(item.costPrice) * parseFloat(quantity)).toString(),
+        referenceType: 'manual',
+        referenceId: null,
+        jobId: null,
+        purchaseOrderId: null,
+        performedBy,
+        transactionDate: new Date(),
+        reason: reason || null,
+        notes: notes || null,
+      });
+
+      res.json(updatedItem);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ PURCHASE ORDERS ROUTES ============
+
+  app.get("/api/purchase-orders", async (_req, res) => {
+    try {
+      const pos = await storage.getPurchaseOrders();
+      res.json(pos);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/purchase-orders/next-number", async (_req, res) => {
+    try {
+      const nextNumber = await storage.getNextPONumber();
+      res.json({ poNumber: nextNumber });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      const po = await storage.getPurchaseOrder(req.params.id);
+      if (!po) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+      res.json(po);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/purchase-orders/supplier/:supplierId", async (req, res) => {
+    try {
+      const pos = await storage.getPurchaseOrdersBySupplier(req.params.supplierId);
+      res.json(pos);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/purchase-orders/status/:status", async (req, res) => {
+    try {
+      const pos = await storage.getPurchaseOrdersByStatus(req.params.status);
+      res.json(pos);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/purchase-orders", async (req, res) => {
+    try {
+      const po = await storage.createPurchaseOrder(req.body);
+      res.status(201).json(po);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      const po = await storage.updatePurchaseOrder(req.params.id, req.body);
+      if (!po) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+      res.json(po);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/purchase-orders/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePurchaseOrder(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+      res.json({ message: "Purchase order deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Receive purchase order (updates stock)
+  app.post("/api/purchase-orders/:id/receive", async (req, res) => {
+    try {
+      const { receivedBy, receivedItems } = req.body;
+      
+      if (!receivedBy || !receivedItems || !Array.isArray(receivedItems)) {
+        return res.status(400).json({ 
+          message: "receivedBy and receivedItems array are required" 
+        });
+      }
+
+      const po = await storage.getPurchaseOrder(req.params.id);
+      if (!po) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+
+      // Update stock for each item
+      for (const receivedItem of receivedItems) {
+        const { itemId, quantityReceived } = receivedItem;
+        const item = await storage.getInventoryItem(itemId);
+        
+        if (item) {
+          const quantityBefore = item.stock;
+          await storage.updateItemStock(itemId, quantityReceived, 'add');
+          
+          // Create transaction
+          await storage.createInventoryTransaction({
+            itemId,
+            itemName: item.name,
+            itemSku: item.sku,
+            type: 'purchase',
+            quantity: quantityReceived,
+            quantityBefore,
+            quantityAfter: (parseFloat(quantityBefore) + parseFloat(quantityReceived)).toString(),
+            unitCost: item.costPrice,
+            totalCost: (parseFloat(item.costPrice) * parseFloat(quantityReceived)).toString(),
+            referenceType: 'purchase_order',
+            referenceId: po.id,
+            jobId: null,
+            purchaseOrderId: po.id,
+            performedBy: receivedBy,
+            transactionDate: new Date(),
+            reason: `Received from PO ${po.poNumber}`,
+            notes: null,
+          });
+        }
+      }
+
+      // Update PO status
+      const updatedPO = await storage.updatePurchaseOrder(req.params.id, {
+        status: 'Received',
+        receivedBy,
+        actualDeliveryDate: new Date(),
+      });
+
+      res.json({ 
+        message: "Purchase order received successfully",
+        purchaseOrder: updatedPO 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ INVENTORY TRANSACTIONS ROUTES ============
+
+  app.get("/api/inventory-transactions", async (_req, res) => {
+    try {
+      const transactions = await storage.getInventoryTransactions();
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory-transactions/item/:itemId", async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByItem(req.params.itemId);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory-transactions/job/:jobId", async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByJob(req.params.jobId);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inventory-transactions/type/:type", async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByType(req.params.type);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ PARTS USAGE ROUTES ============
+
+  app.get("/api/parts-usage", async (_req, res) => {
+    try {
+      const usage = await storage.getPartsUsage();
+      res.json(usage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/parts-usage/job/:jobId", async (req, res) => {
+    try {
+      const usage = await storage.getPartsUsageByJob(req.params.jobId);
+      res.json(usage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/parts-usage/item/:itemId", async (req, res) => {
+    try {
+      const usage = await storage.getPartsUsageByItem(req.params.itemId);
+      res.json(usage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/parts-usage", async (req, res) => {
+    try {
+      const usage = await storage.createPartsUsage(req.body);
+      
+      // Deduct from inventory
+      const item = await storage.getInventoryItem(req.body.itemId);
+      if (item) {
+        const quantityBefore = item.stock;
+        await storage.updateItemStock(req.body.itemId, req.body.quantity, 'subtract');
+        
+        // Create transaction
+        await storage.createInventoryTransaction({
+          itemId: req.body.itemId,
+          itemName: req.body.itemName,
+          itemSku: req.body.itemSku,
+          type: 'usage',
+          quantity: `-${req.body.quantity}`,
+          quantityBefore,
+          quantityAfter: (parseFloat(quantityBefore) - parseFloat(req.body.quantity)).toString(),
+          unitCost: req.body.unitCost,
+          totalCost: req.body.totalCost,
+          referenceType: 'job',
+          referenceId: req.body.jobId,
+          jobId: req.body.jobId,
+          purchaseOrderId: null,
+          performedBy: req.body.usedBy || 'System',
+          transactionDate: new Date(),
+          reason: `Used in job ${req.body.jobNumber}`,
+          notes: req.body.notes || null,
+        });
+      }
+      
+      res.status(201).json(usage);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/parts-usage/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePartsUsage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Parts usage record not found" });
+      }
+      res.json({ message: "Parts usage deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ ANALYTICS ROUTES ============
+
+  app.get("/api/analytics/overview", async (_req, res) => {
+    try {
+      const [
+        students,
+        staff,
+        clients,
+        vehicles,
+        jobs,
+        invoices,
+        expenses,
+        inventory,
+      ] = await Promise.all([
+        storage.getStudents(),
+        storage.getStaff(),
+        storage.getClients(),
+        storage.getVehicles(),
+        storage.getJobs(),
+        storage.getJobInvoices(),
+        storage.getOperatingExpenses(),
+        storage.getInventoryItems(),
+      ]);
+
+      const totalRevenue = invoices.reduce((sum, inv) => 
+        sum + parseFloat(inv.totalAmount || "0"), 0
+      );
+      
+      const totalExpenses = expenses.reduce((sum, exp) => 
+        sum + parseFloat(exp.amount || "0"), 0
+      );
+      
+      const inventoryValue = inventory.reduce((sum, item) => 
+        sum + (parseFloat(item.stock) * parseFloat(item.costPrice)), 0
+      );
+
+      res.json({
+        students: {
+          total: students.length,
+          active: students.filter(s => s.status === 'Active').length,
+          completed: students.filter(s => s.status === 'Completed').length,
+        },
+        staff: {
+          total: staff.length,
+          active: staff.filter(s => s.status === 'Active').length,
+        },
+        clients: {
+          total: clients.length,
+          active: clients.filter(c => c.status === 'Active').length,
+          bySource: {
+            direct: clients.filter(c => c.source === 'Direct').length,
+            insurance: clients.filter(c => c.source.includes('Insurance')).length,
+            corporate: clients.filter(c => c.source.includes('Fleet') || c.source.includes('Corporate')).length,
+          },
+        },
+        vehicles: {
+          total: vehicles.length,
+          inService: vehicles.filter(v => v.status === 'In Service').length,
+        },
+        jobs: {
+          total: jobs.length,
+          pending: jobs.filter(j => j.status === 'Pending').length,
+          inProgress: jobs.filter(j => j.status === 'In Progress').length,
+          completed: jobs.filter(j => j.status === 'Completed').length,
+        },
+        financials: {
+          totalRevenue,
+          totalExpenses,
+          netProfit: totalRevenue - totalExpenses,
+          inventoryValue,
+        },
+        inventory: {
+          totalItems: inventory.length,
+          lowStock: inventory.filter(i => i.isLowStock === 'true').length,
+          outOfStock: inventory.filter(i => parseFloat(i.stock) === 0).length,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/analytics/revenue", async (_req, res) => {
+    try {
+      const invoices = await storage.getJobInvoices();
+      const jobs = await storage.getJobs();
+      
+      // Revenue by month (last 6 months)
+      const monthlyRevenue = new Map<string, number>();
+      const today = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyRevenue.set(key, 0);
+      }
+      
+      invoices.forEach(inv => {
+        if (inv.invoiceDate) {
+          const date = new Date(inv.invoiceDate);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyRevenue.has(key)) {
+            monthlyRevenue.set(key, monthlyRevenue.get(key)! + parseFloat(inv.totalAmount || "0"));
+          }
+        }
+      });
+      
+      const revenueByMonth = Array.from(monthlyRevenue.entries()).map(([month, revenue]) => ({
+        month,
+        revenue: parseFloat(revenue.toFixed(2)),
+      }));
+
+      // Revenue by job type
+      const revenueByJobType = new Map<string, number>();
+      jobs.forEach(job => {
+        const type = job.type || 'Other';
+        const cost = parseFloat(job.actualCost || "0");
+        revenueByJobType.set(type, (revenueByJobType.get(type) || 0) + cost);
+      });
+      
+      const revenueByType = Array.from(revenueByJobType.entries()).map(([type, revenue]) => ({
+        type,
+        revenue: parseFloat(revenue.toFixed(2)),
+      }));
+
+      res.json({
+        revenueByMonth,
+        revenueByType,
+        totalRevenue: invoices.reduce((sum, inv) => sum + parseFloat(inv.totalAmount || "0"), 0),
+        paidInvoices: invoices.filter(i => i.paymentStatus === 'Paid').length,
+        pendingInvoices: invoices.filter(i => i.paymentStatus === 'Unpaid').length,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/analytics/inventory", async (_req, res) => {
+    try {
+      const [inventory, transactions, partsUsage] = await Promise.all([
+        storage.getInventoryItems(),
+        storage.getInventoryTransactions(),
+        storage.getPartsUsage(),
+      ]);
+
+      // Total inventory value
+      const totalValue = inventory.reduce((sum, item) => 
+        sum + (parseFloat(item.stock) * parseFloat(item.costPrice)), 0
+      );
+
+      // Stock by category
+      const stockByCategory = new Map<string, { count: number; value: number }>();
+      inventory.forEach(item => {
+        const category = item.category;
+        const current = stockByCategory.get(category) || { count: 0, value: 0 };
+        stockByCategory.set(category, {
+          count: current.count + 1,
+          value: current.value + (parseFloat(item.stock) * parseFloat(item.costPrice)),
+        });
+      });
+
+      // Top used parts
+      const usageByItem = new Map<string, { name: string; sku: string; quantity: number; profit: number }>();
+      partsUsage.forEach(pu => {
+        const current = usageByItem.get(pu.itemId) || { 
+          name: pu.itemName, 
+          sku: pu.itemSku, 
+          quantity: 0, 
+          profit: 0 
+        };
+        usageByItem.set(pu.itemId, {
+          ...current,
+          quantity: current.quantity + parseFloat(pu.quantity),
+          profit: current.profit + parseFloat(pu.profit),
+        });
+      });
+
+      const topUsedParts = Array.from(usageByItem.values())
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 10);
+
+      // Inventory turnover (last 30 days)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const recentUsage = partsUsage.filter(pu => 
+        pu.usedDate && new Date(pu.usedDate) > thirtyDaysAgo
+      );
+
+      res.json({
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        totalItems: inventory.length,
+        lowStockItems: inventory.filter(i => i.isLowStock === 'true').length,
+        outOfStockItems: inventory.filter(i => parseFloat(i.stock) === 0).length,
+        stockByCategory: Array.from(stockByCategory.entries()).map(([category, data]) => ({
+          category,
+          itemCount: data.count,
+          value: parseFloat(data.value.toFixed(2)),
+        })),
+        topUsedParts,
+        recentTransactions: transactions.slice(-20).reverse(),
+        turnoverRate: {
+          period: '30 days',
+          partsUsed: recentUsage.length,
+          revenue: recentUsage.reduce((sum, pu) => sum + parseFloat(pu.totalPrice), 0),
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/analytics/staff", async (_req, res) => {
+    try {
+      const [staff, jobs, students] = await Promise.all([
+        storage.getStaff(),
+        storage.getJobs(),
+        storage.getStudents(),
+      ]);
+
+      // Jobs by staff member
+      const jobsByStaff = new Map<string, { name: string; jobCount: number; completed: number }>();
+      jobs.forEach(job => {
+        if (job.assignedToId && job.assignedToName) {
+          const current = jobsByStaff.get(job.assignedToId) || { 
+            name: job.assignedToName, 
+            jobCount: 0, 
+            completed: 0 
+          };
+          jobsByStaff.set(job.assignedToId, {
+            name: current.name,
+            jobCount: current.jobCount + 1,
+            completed: current.completed + (job.status === 'Completed' ? 1 : 0),
+          });
+        }
+      });
+
+      const staffPerformance = Array.from(jobsByStaff.entries()).map(([id, data]) => ({
+        staffId: id,
+        staffName: data.name,
+        totalJobs: data.jobCount,
+        completedJobs: data.completed,
+        completionRate: data.jobCount > 0 ? ((data.completed / data.jobCount) * 100).toFixed(1) : '0',
+      }));
+
+      res.json({
+        totalStaff: staff.length,
+        activeStaff: staff.filter(s => s.status === 'Active').length,
+        staffPerformance,
+        totalStudents: students.length,
+        activeStudents: students.filter(s => s.status === 'Active').length,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/analytics/jobs", async (_req, res) => {
+    try {
+      const jobs = await storage.getJobs();
+
+      // Jobs by status
+      const jobsByStatus = {
+        pending: jobs.filter(j => j.status === 'Pending').length,
+        inProgress: jobs.filter(j => j.status === 'In Progress').length,
+        completed: jobs.filter(j => j.status === 'Completed').length,
+        cancelled: jobs.filter(j => j.status === 'Cancelled').length,
+      };
+
+      // Jobs by type
+      const jobsByType = new Map<string, number>();
+      jobs.forEach(job => {
+        const type = job.type || 'Other';
+        jobsByType.set(type, (jobsByType.get(type) || 0) + 1);
+      });
+
+      // Average completion time for completed jobs
+      const completedJobs = jobs.filter(j => j.completedDate && j.startedDate);
+      const avgCompletionTime = completedJobs.length > 0
+        ? completedJobs.reduce((sum, job) => {
+            const completed = new Date(job.completedDate!).getTime();
+            const started = new Date(job.startedDate!).getTime();
+            return sum + (completed - started);
+          }, 0) / completedJobs.length / (1000 * 60 * 60 * 24) // Convert to days
+        : 0;
+
+      res.json({
+        totalJobs: jobs.length,
+        jobsByStatus,
+        jobsByType: Array.from(jobsByType.entries()).map(([type, count]) => ({ type, count })),
+        avgCompletionTimeDays: parseFloat(avgCompletionTime.toFixed(1)),
+        completedJobs: completedJobs.length,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
