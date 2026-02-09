@@ -9,6 +9,9 @@ import {
   type Testimonial, type InsertTestimonial,
   type HRNote, type InsertHRNote,
   type Certificate, type InsertCertificate,
+  type Vehicle, type InsertVehicle,
+  type VehicleInspection, type InsertVehicleInspection,
+  type InspectionMedia, type InsertInspectionMedia,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -102,6 +105,30 @@ export interface IStorage {
   createCertificate(certificate: InsertCertificate): Promise<Certificate>;
   updateCertificate(id: string, certificate: Partial<InsertCertificate>): Promise<Certificate | undefined>;
   deleteCertificate(id: string): Promise<boolean>;
+  
+  // Vehicles
+  getVehicles(): Promise<Vehicle[]>;
+  getVehicle(id: string): Promise<Vehicle | undefined>;
+  getVehiclesByClient(clientId: string): Promise<Vehicle[]>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
+  deleteVehicle(id: string): Promise<boolean>;
+  
+  // Vehicle Inspections
+  getVehicleInspections(): Promise<VehicleInspection[]>;
+  getVehicleInspection(id: string): Promise<VehicleInspection | undefined>;
+  getInspectionsByVehicle(vehicleId: string): Promise<VehicleInspection[]>;
+  getInspectionsByInspector(inspectorId: string): Promise<VehicleInspection[]>;
+  getInspectionsByStatus(status: string): Promise<VehicleInspection[]>;
+  createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection>;
+  updateVehicleInspection(id: string, inspection: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined>;
+  deleteVehicleInspection(id: string): Promise<boolean>;
+  
+  // Inspection Media
+  getInspectionMedia(inspectionId: string): Promise<InspectionMedia[]>;
+  getMediaItem(id: string): Promise<InspectionMedia | undefined>;
+  createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia>;
+  deleteInspectionMedia(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -115,6 +142,9 @@ export class MemStorage implements IStorage {
   private testimonials: Map<string, Testimonial>;
   private hrNotes: Map<string, HRNote>;
   private certificates: Map<string, Certificate>;
+  private vehicles: Map<string, Vehicle>;
+  private vehicleInspections: Map<string, VehicleInspection>;
+  private inspectionMedia: Map<string, InspectionMedia>;
 
   constructor() {
     this.users = new Map();
@@ -127,6 +157,9 @@ export class MemStorage implements IStorage {
     this.testimonials = new Map();
     this.hrNotes = new Map();
     this.certificates = new Map();
+    this.vehicles = new Map();
+    this.vehicleInspections = new Map();
+    this.inspectionMedia = new Map();
     
     // Seed some initial data for testing
     this.seedData();
@@ -313,6 +346,66 @@ export class MemStorage implements IStorage {
 
     sampleExpenses.forEach(expense => {
       this.operatingExpenses.set(expense.id, expense);
+    });
+
+    // Get client IDs for vehicle seeding
+    const clientIds = Array.from(this.clients.values()).map(c => c.id);
+    const staffIds = Array.from(this.staff.values()).map(s => s.id);
+
+    // Seed vehicle data
+    const sampleVehicles: Vehicle[] = [
+      {
+        id: randomUUID(),
+        vin: "1HGBH41JXMN109186",
+        make: "Honda",
+        model: "Civic",
+        year: "2021",
+        licensePlate: "ABC-1234",
+        color: "Silver",
+        mileage: "45000",
+        clientId: clientIds[0] || null,
+        clientName: "John Smith",
+        status: "Active",
+        notes: "Regular maintenance customer",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        vin: "5FNRL5H40JB123456",
+        make: "Toyota",
+        model: "Camry",
+        year: "2020",
+        licensePlate: "XYZ-5678",
+        color: "Blue",
+        mileage: "62000",
+        clientId: clientIds[1] || null,
+        clientName: "ABC Fleet Services",
+        status: "In Service",
+        notes: "Fleet vehicle - regular inspections",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        vin: "2T1BURHE0JC987654",
+        make: "Ford",
+        model: "F-150",
+        year: "2019",
+        licensePlate: "TRK-9999",
+        color: "Red",
+        mileage: "78000",
+        clientId: clientIds[0] || null,
+        clientName: "John Smith",
+        status: "Active",
+        notes: "Work truck - heavy use",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    sampleVehicles.forEach(vehicle => {
+      this.vehicles.set(vehicle.id, vehicle);
     });
   }
 
@@ -759,6 +852,148 @@ export class MemStorage implements IStorage {
 
   async deleteCertificate(id: string): Promise<boolean> {
     return this.certificates.delete(id);
+  }
+
+  // ============ VEHICLES METHODS ============
+  
+  async getVehicles(): Promise<Vehicle[]> {
+    return Array.from(this.vehicles.values());
+  }
+
+  async getVehicle(id: string): Promise<Vehicle | undefined> {
+    return this.vehicles.get(id);
+  }
+
+  async getVehiclesByClient(clientId: string): Promise<Vehicle[]> {
+    return Array.from(this.vehicles.values())
+      .filter(v => v.clientId === clientId);
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const newVehicle: Vehicle = {
+      id: randomUUID(),
+      ...vehicle,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicles.set(newVehicle.id, newVehicle);
+    return newVehicle;
+  }
+
+  async updateVehicle(id: string, updates: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    const vehicle = this.vehicles.get(id);
+    if (!vehicle) return undefined;
+    
+    const updatedVehicle = { 
+      ...vehicle, 
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.vehicles.set(id, updatedVehicle);
+    return updatedVehicle;
+  }
+
+  async deleteVehicle(id: string): Promise<boolean> {
+    return this.vehicles.delete(id);
+  }
+
+  // ============ VEHICLE INSPECTIONS METHODS ============
+  
+  async getVehicleInspections(): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA; // Most recent first
+      });
+  }
+
+  async getVehicleInspection(id: string): Promise<VehicleInspection | undefined> {
+    return this.vehicleInspections.get(id);
+  }
+
+  async getInspectionsByVehicle(vehicleId: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.vehicleId === vehicleId)
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getInspectionsByInspector(inspectorId: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.inspectorId === inspectorId)
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getInspectionsByStatus(status: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.overallStatus === status);
+  }
+
+  async createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection> {
+    const newInspection: VehicleInspection = {
+      id: randomUUID(),
+      ...inspection,
+      inspectionDate: inspection.inspectionDate || new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicleInspections.set(newInspection.id, newInspection);
+    return newInspection;
+  }
+
+  async updateVehicleInspection(id: string, updates: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined> {
+    const inspection = this.vehicleInspections.get(id);
+    if (!inspection) return undefined;
+    
+    const updatedInspection = { 
+      ...inspection, 
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.vehicleInspections.set(id, updatedInspection);
+    return updatedInspection;
+  }
+
+  async deleteVehicleInspection(id: string): Promise<boolean> {
+    return this.vehicleInspections.delete(id);
+  }
+
+  // ============ INSPECTION MEDIA METHODS ============
+  
+  async getInspectionMedia(inspectionId: string): Promise<InspectionMedia[]> {
+    return Array.from(this.inspectionMedia.values())
+      .filter(m => m.inspectionId === inspectionId)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getMediaItem(id: string): Promise<InspectionMedia | undefined> {
+    return this.inspectionMedia.get(id);
+  }
+
+  async createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia> {
+    const newMedia: InspectionMedia = {
+      id: randomUUID(),
+      ...media,
+      createdAt: new Date(),
+    };
+    this.inspectionMedia.set(newMedia.id, newMedia);
+    return newMedia;
+  }
+
+  async deleteInspectionMedia(id: string): Promise<boolean> {
+    return this.inspectionMedia.delete(id);
   }
 }
 
