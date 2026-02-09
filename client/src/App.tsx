@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import VehicleList from "@/pages/VehicleList";
@@ -12,10 +13,8 @@ import ClientDirectory from "@/pages/ClientDirectory";
 import Billing from "@/pages/Billing";
 import Communication from "@/pages/Communication";
 import Analytics from "@/pages/Analytics";
-
 import Academy from "@/pages/Academy";
 import AdminBills from "@/pages/AdminBills";
-
 import DVI from "@/pages/DVI";
 import DocumentCenter from "@/pages/DocumentCenter";
 
@@ -47,10 +46,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="justfix-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
