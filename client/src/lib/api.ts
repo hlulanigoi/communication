@@ -7,7 +7,10 @@ import type {
   OperatingExpense, 
   HRNote, 
   Testimonial, 
-  Certificate 
+  Certificate,
+  Vehicle,
+  VehicleInspection,
+  InspectionMedia
 } from '@shared/schema';
 
 const API_BASE = '/api';
