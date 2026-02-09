@@ -824,5 +824,215 @@ export async function registerRoutes(
     }
   });
 
+  // ============ VEHICLES ROUTES ============
+
+  app.get("/api/vehicles", async (_req, res) => {
+    try {
+      const vehicles = await storage.getVehicles();
+      res.json(vehicles);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/vehicles/:id", async (req, res) => {
+    try {
+      const vehicle = await storage.getVehicle(req.params.id);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Vehicle not found" });
+      }
+      res.json(vehicle);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/vehicles/by-client/:clientId", async (req, res) => {
+    try {
+      const vehicles = await storage.getVehiclesByClient(req.params.clientId);
+      res.json(vehicles);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/vehicles", async (req, res) => {
+    try {
+      const vehicle = await storage.createVehicle(req.body);
+      res.status(201).json(vehicle);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/vehicles/:id", async (req, res) => {
+    try {
+      const vehicle = await storage.updateVehicle(req.params.id, req.body);
+      if (!vehicle) {
+        return res.status(404).json({ message: "Vehicle not found" });
+      }
+      res.json(vehicle);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/vehicles/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteVehicle(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Vehicle not found" });
+      }
+      res.json({ message: "Vehicle deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ VEHICLE INSPECTIONS ROUTES ============
+
+  app.get("/api/inspections", async (_req, res) => {
+    try {
+      const inspections = await storage.getVehicleInspections();
+      res.json(inspections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inspections/:id", async (req, res) => {
+    try {
+      const inspection = await storage.getVehicleInspection(req.params.id);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      res.json(inspection);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inspections/by-vehicle/:vehicleId", async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByVehicle(req.params.vehicleId);
+      res.json(inspections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inspections/by-inspector/:inspectorId", async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByInspector(req.params.inspectorId);
+      res.json(inspections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/inspections/by-status/:status", async (req, res) => {
+    try {
+      const inspections = await storage.getInspectionsByStatus(req.params.status);
+      res.json(inspections);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/inspections", async (req, res) => {
+    try {
+      const inspection = await storage.createVehicleInspection(req.body);
+      res.status(201).json(inspection);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/inspections/:id", async (req, res) => {
+    try {
+      const inspection = await storage.updateVehicleInspection(req.params.id, req.body);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      res.json(inspection);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/inspections/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteVehicleInspection(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+      res.json({ message: "Inspection deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ INSPECTION MEDIA ROUTES ============
+
+  app.get("/api/inspections/:inspectionId/media", async (req, res) => {
+    try {
+      const media = await storage.getInspectionMedia(req.params.inspectionId);
+      res.json(media);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/inspections/:inspectionId/media", async (req, res) => {
+    try {
+      const media = await storage.createInspectionMedia({
+        ...req.body,
+        inspectionId: req.params.inspectionId,
+      });
+      res.status(201).json(media);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/inspections/media/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteInspectionMedia(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Media not found" });
+      }
+      res.json({ message: "Media deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Send inspection to client
+  app.post("/api/inspections/:id/send-to-client", async (req, res) => {
+    try {
+      const inspection = await storage.getVehicleInspection(req.params.id);
+      if (!inspection) {
+        return res.status(404).json({ message: "Inspection not found" });
+      }
+
+      // Update inspection status
+      await storage.updateVehicleInspection(req.params.id, {
+        sentToClient: 'true',
+        sentToClientDate: new Date(),
+        overallStatus: 'Sent to Client',
+      });
+
+      // In a real implementation, you would send an email/SMS here
+      // For now, we'll just simulate success
+      res.json({
+        success: true,
+        message: `Inspection report sent to ${inspection.clientEmail || inspection.clientPhone || 'client'}`,
+        sentDate: new Date(),
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
