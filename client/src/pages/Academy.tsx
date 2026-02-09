@@ -120,10 +120,7 @@ export default function Academy() {
         return;
       }
 
-      await createStudent({
-        ...enrollForm,
-        placementStart: new Date(),
-      });
+      await createStudent(enrollForm);
 
       toast({
         title: "Success",
