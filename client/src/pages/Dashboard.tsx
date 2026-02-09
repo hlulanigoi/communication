@@ -246,10 +246,20 @@ export default function Dashboard() {
 
       {/* Vehicle Status Row */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Active Fleet Status</CardTitle>
-            <CardDescription>Vehicles currently on premises.</CardDescription>
+        <Card className="md:col-span-2 industrial-border bg-card/40 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/10">
+            <div>
+              <CardTitle className="text-sm font-display tracking-widest uppercase italic">Active Fleet Status</CardTitle>
+              <CardDescription className="text-[10px] font-bold uppercase tracking-tight mt-1">Vehicles currently on premises.</CardDescription>
+            </div>
+            <Button 
+              onClick={() => setLocation('/vehicles')}
+              variant="outline" 
+              size="sm" 
+              className="text-[9px] h-7 px-3 font-black uppercase tracking-widest border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all"
+            >
+              View All Fleet
+            </Button>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -259,29 +269,32 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
-                {mockVehicles.slice(0, 3).map((vehicle) => (
+              <div className="space-y-2">
+                {mockVehicles.slice(0, 4).map((vehicle) => (
                   <div 
                     key={vehicle.id} 
-                    onClick={() => setLocation('/vehicle-list')}
-                    className="flex items-center justify-between border-b border-border/40 pb-4 last:border-0 last:pb-0 cursor-pointer hover:bg-secondary/10 p-2 -m-2 rounded transition-colors"
+                    onClick={() => setLocation('/vehicles')}
+                    className="flex items-center justify-between border border-border/50 bg-background/20 p-3 rounded-lg hover:bg-secondary/10 hover:border-primary/30 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-md bg-secondary/50 flex items-center justify-center">
-                        <span className="font-bold text-xs font-display">{vehicle.make.substring(0,2)}</span>
+                      <div className="w-10 h-10 rounded-md bg-secondary/50 flex items-center justify-center border border-border/50 group-hover:border-primary/50 transition-colors">
+                        <span className="font-bold text-xs font-display text-primary">{vehicle.make.substring(0,2)}</span>
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{vehicle.year} {vehicle.make} {vehicle.model}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{vehicle.vin}</p>
+                        <p className="font-bold text-sm tracking-tight">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono font-bold">{vehicle.vin}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <Badge variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} className="capitalize">
-                        {vehicle.status}
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10">
-                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                      </Button>
+                    <div className="flex items-center gap-6">
+                      <div className="hidden sm:block text-right">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter mb-1">Status</p>
+                        <Badge variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} className="text-[9px] font-black uppercase tracking-widest px-2 py-0 h-4">
+                          {vehicle.status}
+                        </Badge>
+                      </div>
+                      <div className="w-8 h-8 rounded border border-border/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -290,29 +303,53 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-primary/10 via-background to-background border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-primary">Quick Actions</CardTitle>
+        <Card className="bg-gradient-to-br from-primary/15 via-background to-background border-primary/30 shadow-2xl relative overflow-hidden group/card min-h-[400px] industrial-border">
+          <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] pointer-events-none" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
+          <CardHeader className="relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-primary rounded-full animate-pulse" />
+              <CardTitle className="text-primary font-display tracking-[0.2em] italic uppercase text-lg">Quick Actions</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-4 relative z-10">
              {[
-               { label: "Scan VIN / Plate", action: () => setLocation("/vehicle-list") },
-               { label: "Create Invoice", action: () => setLocation("/billing") },
-               { label: "Lookup Part", action: () => setLocation("/inventory") },
-               { label: "Schedule Appointment", action: () => setLocation("/job-board") }
-             ].map(({ label, action }, i) => (
+               { label: "Scan VIN / Plate", icon: Search, action: () => setLocation("/vehicles"), description: "Register new vehicle", shortcut: "V" },
+               { label: "Create Invoice", icon: CheckCircle2, action: () => setLocation("/billing"), description: "Generate service bill", shortcut: "I" },
+               { label: "Lookup Part", icon: Info, action: () => setLocation("/inventory"), description: "Check warehouse stock", shortcut: "P" },
+               { label: "Schedule Job", icon: Clock, action: () => setLocation("/jobs"), description: "Book workshop slot", shortcut: "S" }
+             ].map(({ label, icon: Icon, action, description, shortcut }, i) => (
                <Button 
                  key={i} 
                  onClick={action}
                  variant="outline" 
-                 className="w-full justify-start text-left bg-background/50 hover:bg-primary hover:text-primary-foreground border-border hover:border-primary transition-all group font-bold text-xs uppercase italic tracking-tighter">
-                 <div className="w-5 h-5 bg-muted flex items-center justify-center mr-3 group-hover:bg-primary-foreground group-hover:text-primary transition-colors">
-                    <Plus className="w-3 h-3" />
+                 className="w-full h-20 justify-between px-5 bg-background/60 backdrop-blur-md hover:bg-primary hover:text-primary-foreground border-primary/20 hover:border-primary transition-all duration-500 group/btn font-bold text-xs uppercase tracking-widest overflow-hidden relative shadow-inner">
+                 <div className="flex items-center gap-5">
+                   <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover/btn:bg-primary-foreground/20 transition-all duration-500 group-hover/btn:rotate-12 group-hover/btn:scale-110 border border-primary/10 group-hover/btn:border-primary-foreground/30">
+                      <Icon className="w-6 h-6 text-primary group-hover/btn:text-primary-foreground" />
+                   </div>
+                   <div className="text-left">
+                     <span className="block text-base tracking-tight mb-0.5">{label}</span>
+                     <span className="block text-[10px] text-muted-foreground group-hover/btn:text-primary-foreground/70 lowercase font-medium tracking-normal opacity-80">{description}</span>
+                   </div>
                  </div>
-                 {label}
+                 <div className="flex items-center gap-3">
+                   <div className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-primary/20 bg-background/50 px-1.5 font-mono text-[10px] font-black text-primary group-hover/btn:border-primary-foreground/50 group-hover/btn:text-primary-foreground transition-colors uppercase">
+                     {shortcut}
+                   </div>
+                   <ArrowRight className="w-5 h-5 opacity-0 -translate-x-6 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-500 ease-out" />
+                 </div>
+                 
+                 {/* Glowing background elements */}
+                 <div className="absolute top-0 right-0 w-24 h-full bg-primary/5 -skew-x-12 translate-x-12 group-hover/btn:bg-primary-foreground/15 transition-all duration-700" />
+                 <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary/0 group-hover/btn:bg-primary-foreground/40 transition-all duration-500" />
                </Button>
              ))}
           </CardContent>
+          <div className="absolute bottom-4 left-0 w-full px-6 flex items-center justify-between text-[8px] font-black text-muted-foreground/30 tracking-[0.3em] uppercase pointer-events-none">
+            <span>System Ready</span>
+            <span>v4.2.0</span>
+          </div>
         </Card>
       </div>
     </Layout>
