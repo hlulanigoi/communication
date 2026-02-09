@@ -67,11 +67,95 @@ export async function getDocument(id: string): Promise<Document> {
   return res.json();
 }
 
+export async function searchDocuments(query: string): Promise<Document[]> {
+  const res = await fetch(`${API_BASE}/documents/search/${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error('Failed to search documents');
+  return res.json();
+}
+
+export interface DocumentFilters {
+  type?: string;
+  category?: string;
+  startDate?: Date;
+  endDate?: Date;
+  studentId?: string;
+  clientId?: string;
+  staffId?: string;
+}
+
+export async function filterDocuments(filters: DocumentFilters): Promise<Document[]> {
+  const res = await fetch(`${API_BASE}/documents/filter`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters),
+  });
+  if (!res.ok) throw new Error('Failed to filter documents');
+  return res.json();
+}
+
+export async function getDocumentsByCategory(category: string): Promise<Document[]> {
+  const res = await fetch(`${API_BASE}/documents/category/${encodeURIComponent(category)}`);
+  if (!res.ok) throw new Error('Failed to fetch documents by category');
+  return res.json();
+}
+
+export interface UploadDocumentRequest {
+  title: string;
+  type: string;
+  category: string;
+  fileType: string;
+  fileName: string;
+  fileSize: string;
+  content: string;
+  studentId?: string;
+  clientId?: string;
+  staffId?: string;
+  description?: string;
+  tags?: string[];
+  uploadedBy?: string;
+}
+
+export async function uploadDocument(data: UploadDocumentRequest): Promise<Document> {
+  const res = await fetch(`${API_BASE}/documents/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...data,
+      tags: data.tags ? JSON.stringify(data.tags) : null,
+    }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to upload document');
+  }
+  return res.json();
+}
+
+export async function updateDocument(id: string, data: Partial<Document>): Promise<Document> {
+  const res = await fetch(`${API_BASE}/documents/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update document');
+  return res.json();
+}
+
 export async function deleteDocument(id: string): Promise<void> {
   const res = await fetch(`${API_BASE}/documents/${id}`, {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Failed to delete document');
+}
+
+export async function bulkDeleteDocuments(ids: string[]): Promise<{ deletedCount: number; message: string }> {
+  const res = await fetch(`${API_BASE}/documents/bulk-delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) throw new Error('Failed to bulk delete documents');
+  return res.json();
 }
 
 export function getDocumentDownloadUrl(id: string): string {

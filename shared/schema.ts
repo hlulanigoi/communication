@@ -41,23 +41,43 @@ export const insertStudentSchema = createInsertSchema(students).omit({
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type Student = typeof students.$inferSelect;
 
-// Documents table
+// Documents table - Enhanced for comprehensive document management
 export const documents = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   type: text("type").notNull(), // "Certificate", "Placement Letter", "Compliance", "Custom"
+  category: text("category").notNull().default('General'), // "Student", "Vehicle", "Client", "Job", "Staff", "Insurance", "General"
+  fileType: text("file_type").notNull().default('application/pdf'), // MIME type
+  fileName: text("file_name"), // Original filename
+  fileSize: text("file_size"), // File size in bytes
+  
+  // Reference IDs for linking
   studentId: varchar("student_id").references(() => students.id, { onDelete: 'cascade' }),
-  studentName: text("student_name"), // Denormalized for easy access
-  content: text("content"), // Base64 encoded PDF or file content
+  clientId: varchar("client_id").references(() => clients.id, { onDelete: 'set null' }),
+  staffId: varchar("staff_id").references(() => staff.id, { onDelete: 'set null' }),
+  
+  // Denormalized names for easy access
+  studentName: text("student_name"),
+  clientName: text("client_name"),
+  staffName: text("staff_name"),
+  
+  content: text("content"), // Base64 encoded file content
   metadata: text("metadata"), // JSON string for additional info
+  tags: text("tags"), // JSON array of tags for better search
+  description: text("description"), // Optional description
+  version: text("version").default("1.0"), // Document version
+  
+  uploadedBy: text("uploaded_by"), // Who uploaded/generated
   generatedDate: timestamp("generated_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
   generatedDate: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
@@ -237,3 +257,95 @@ export const insertCertificateSchema = createInsertSchema(certificates).omit({
 
 export type InsertCertificate = z.infer<typeof insertCertificateSchema>;
 export type Certificate = typeof certificates.$inferSelect;
+
+// ============ VEHICLE INSPECTIONS TABLES ============
+
+// Vehicles table
+export const vehicles = pgTable("vehicles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vin: text("vin"),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  year: text("year").notNull(),
+  licensePlate: text("license_plate"),
+  color: text("color"),
+  mileage: text("mileage"),
+  clientId: varchar("client_id").references(() => clients.id, { onDelete: 'set null' }),
+  clientName: text("client_name"),
+  status: text("status").notNull().default('Active'), // Active, Inactive, In Service
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVehicleSchema = createInsertSchema(vehicles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
+export type Vehicle = typeof vehicles.$inferSelect;
+
+// Vehicle Inspections table
+export const vehicleInspections = pgTable("vehicle_inspections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: varchar("vehicle_id").references(() => vehicles.id, { onDelete: 'set null' }),
+  vehicleInfo: text("vehicle_info"), // JSON string with make, model, year, license
+  jobId: text("job_id"), // Optional job reference
+  jobNumber: text("job_number"), // Job number for display
+  inspectorId: varchar("inspector_id").references(() => staff.id, { onDelete: 'set null' }),
+  inspectorName: text("inspector_name").notNull(),
+  clientId: varchar("client_id").references(() => clients.id, { onDelete: 'set null' }),
+  clientName: text("client_name"),
+  clientPhone: text("client_phone"),
+  clientEmail: text("client_email"),
+  inspectionData: text("inspection_data").notNull(), // JSON with all inspection items and statuses
+  overallStatus: text("overall_status").notNull().default('In Progress'), // In Progress, Completed, Sent to Client
+  criticalIssuesCount: text("critical_issues_count").default("0"),
+  attentionIssuesCount: text("attention_issues_count").default("0"),
+  passedItemsCount: text("passed_items_count").default("0"),
+  mediaUrls: text("media_urls"), // JSON array of media file paths/URLs
+  inspectorNotes: text("inspector_notes"),
+  inspectorSignature: text("inspector_signature"), // Base64 signature or signature data
+  sentToClient: text("sent_to_client").default('false'),
+  sentToClientDate: timestamp("sent_to_client_date"),
+  clientApproved: text("client_approved").default('false'),
+  clientApprovedDate: timestamp("client_approved_date"),
+  pdfReportUrl: text("pdf_report_url"),
+  inspectionDate: timestamp("inspection_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVehicleInspectionSchema = createInsertSchema(vehicleInspections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVehicleInspection = z.infer<typeof insertVehicleInspectionSchema>;
+export type VehicleInspection = typeof vehicleInspections.$inferSelect;
+
+// Inspection Media table (for storing individual media files)
+export const inspectionMedia = pgTable("inspection_media", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  inspectionId: varchar("inspection_id").notNull().references(() => vehicleInspections.id, { onDelete: 'cascade' }),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(), // image/jpeg, image/png, video/mp4, etc.
+  fileSize: text("file_size"),
+  fileData: text("file_data"), // Base64 encoded file data
+  fileUrl: text("file_url"), // Alternative: URL to stored file
+  category: text("category"), // Which inspection section this belongs to
+  uploadedBy: text("uploaded_by"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInspectionMediaSchema = createInsertSchema(inspectionMedia).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertInspectionMedia = z.infer<typeof insertInspectionMediaSchema>;
+export type InspectionMedia = typeof inspectionMedia.$inferSelect;
