@@ -84,7 +84,7 @@ export default function Dashboard() {
     },
     { 
       label: "Pending Invoices", 
-      value: invoices.filter(i => i.status === 'Pending').length.toString(), 
+      value: invoices.filter(i => i.paymentStatus === 'Unpaid' || i.paymentStatus === 'Partial').length.toString(), 
       change: "0", 
       icon: AlertTriangle, 
       color: "text-rose-500" 
@@ -114,7 +114,15 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
+<<<<<<< HEAD
+          <Card 
+            key={i} 
+            data-testid={`stat-card-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
+            className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm"
+          >
+=======
           <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm group">
+>>>>>>> 610fece48c1e90db85c34a838fa5204347f4d964
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-[10px] font-black text-muted-foreground font-display tracking-[0.15em] uppercase">
                 {stat.label}
@@ -125,12 +133,21 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pt-2">
               {loading ? (
+<<<<<<< HEAD
+                <div className="h-8 bg-secondary/10 animate-pulse rounded" data-testid="stat-loading" />
+              ) : (
+                <>
+                  <div className="text-3xl font-black font-display text-glow-red" data-testid="stat-value">{stat.value}</div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
+                    <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
+=======
                 <div className="h-10 bg-secondary/10 animate-pulse rounded-lg" />
               ) : (
                 <>
                   <div className="text-4xl font-black font-display tracking-tighter text-glow-red">{stat.value}</div>
                   <div className="flex items-center gap-2 mt-2">
                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-mono font-bold", stat.change.startsWith('+') ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary")}>
+>>>>>>> 610fece48c1e90db85c34a838fa5204347f4d964
                       {stat.change}
                     </span>
                     <span className="text-[9px] text-muted-foreground font-black uppercase tracking-wider">VS LAST WEEK</span>

@@ -9,12 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle } from "lucide-react";
 import type { Student, Staff, JobInvoice } from "@shared/schema";
-import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [students, setStudents] = useState<Student[]>([]);
-  const [staff, setStaff] = useState<Staff[]>(mockStaff as any);
+  const [staff, setStaff] = useState<Staff[]>(mockStaff as Staff[]);
   const [invoices, setInvoices] = useState<JobInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -112,29 +111,27 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm group">
+          <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-[10px] font-black text-muted-foreground font-display tracking-[0.15em] uppercase">
+              <CardTitle className="text-xs font-bold text-muted-foreground font-display tracking-widest uppercase">
                 {stat.label}
               </CardTitle>
-              <div className={cn("p-2 rounded-lg bg-background border border-border/50 group-hover:border-primary/50 transition-colors", stat.color.replace('text', 'bg').replace('500', '500/10'))}>
-                <stat.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", stat.color)} />
-              </div>
+              <stat.icon className={`h-4 w-4 ${stat.color} opacity-80`} />
             </CardHeader>
-            <CardContent className="pt-2">
+            <CardContent>
               {loading ? (
-                <div className="h-10 bg-secondary/10 animate-pulse rounded-lg" />
+                <div className="h-8 bg-secondary/10 animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="text-4xl font-black font-display tracking-tighter text-glow-red">{stat.value}</div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-mono font-bold", stat.change.startsWith('+') ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary")}>
+                  <div className="text-3xl font-black font-display text-glow-red">{stat.value}</div>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
+                    <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
                       {stat.change}
                     </span>
-                    <span className="text-[9px] text-muted-foreground font-black uppercase tracking-wider">VS LAST WEEK</span>
-                  </div>
+                    VS PREV PERIOD
+                  </p>
                 </>
               )}
             </CardContent>
@@ -218,7 +215,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] font-black text-foreground block uppercase">{job.assignedTo}</span>
-                      <span className="text-[9px] text-primary font-bold uppercase">{(job as any).status}</span>
+                      <span className="text-[9px] text-primary font-bold uppercase">{job.status}</span>
                     </div>
                   </div>
                 ))}
