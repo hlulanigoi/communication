@@ -1395,6 +1395,254 @@ export class MemStorage implements IStorage {
   async deleteJob(id: string): Promise<boolean> {
     return this.jobs.delete(id);
   }
+
+  // ============ SUPPLIERS METHODS ============
+  
+  async getSuppliers(): Promise<Supplier[]> {
+    return Array.from(this.suppliers.values());
+  }
+
+  async getSupplier(id: string): Promise<Supplier | undefined> {
+    return this.suppliers.get(id);
+  }
+
+  async getSuppliersByStatus(status: string): Promise<Supplier[]> {
+    return Array.from(this.suppliers.values()).filter(s => s.status === status);
+  }
+
+  async createSupplier(data: InsertSupplier): Promise<Supplier> {
+    const supplier: Supplier = {
+      id: randomUUID(),
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.suppliers.set(supplier.id, supplier);
+    return supplier;
+  }
+
+  async updateSupplier(id: string, data: Partial<InsertSupplier>): Promise<Supplier | undefined> {
+    const supplier = this.suppliers.get(id);
+    if (!supplier) return undefined;
+
+    const updated: Supplier = {
+      ...supplier,
+      ...data,
+      updatedAt: new Date(),
+    };
+    this.suppliers.set(id, updated);
+    return updated;
+  }
+
+  async deleteSupplier(id: string): Promise<boolean> {
+    return this.suppliers.delete(id);
+  }
+
+  // ============ INVENTORY ITEMS METHODS ============
+
+  async getInventoryItems(): Promise<InventoryItem[]> {
+    return Array.from(this.inventoryItems.values());
+  }
+
+  async getInventoryItem(id: string): Promise<InventoryItem | undefined> {
+    return this.inventoryItems.get(id);
+  }
+
+  async getInventoryItemsByCategory(category: string): Promise<InventoryItem[]> {
+    return Array.from(this.inventoryItems.values()).filter(item => item.category === category);
+  }
+
+  async getInventoryItemsBySupplier(supplierId: string): Promise<InventoryItem[]> {
+    return Array.from(this.inventoryItems.values()).filter(item => item.supplierId === supplierId);
+  }
+
+  async getLowStockItems(): Promise<InventoryItem[]> {
+    return Array.from(this.inventoryItems.values()).filter(item => {
+      const stock = parseFloat(item.stock);
+      const minStock = parseFloat(item.minStock);
+      return stock <= minStock;
+    });
+  }
+
+  async searchInventoryItems(query: string): Promise<InventoryItem[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.inventoryItems.values()).filter(item =>
+      item.name.toLowerCase().includes(lowerQuery) ||
+      item.sku.toLowerCase().includes(lowerQuery) ||
+      item.category.toLowerCase().includes(lowerQuery) ||
+      (item.description && item.description.toLowerCase().includes(lowerQuery)) ||
+      (item.location && item.location.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  async createInventoryItem(data: InsertInventoryItem): Promise<InventoryItem> {
+    const stock = parseFloat(data.stock || "0");
+    const minStock = parseFloat(data.minStock || "5");
+    
+    const item: InventoryItem = {
+      id: randomUUID(),
+      ...data,
+      isLowStock: stock <= minStock ? 'true' : 'false',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.inventoryItems.set(item.id, item);
+    return item;
+  }
+
+  async updateInventoryItem(id: string, data: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined> {
+    const item = this.inventoryItems.get(id);
+    if (!item) return undefined;
+
+    const updated: InventoryItem = {
+      ...item,
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    // Update low stock flag
+    const stock = parseFloat(updated.stock);
+    const minStock = parseFloat(updated.minStock);
+    updated.isLowStock = stock <= minStock ? 'true' : 'false';
+
+    this.inventoryItems.set(id, updated);
+    return updated;
+  }
+
+  async deleteInventoryItem(id: string): Promise<boolean> {
+    return this.inventoryItems.delete(id);
+  }
+
+  async updateItemStock(id: string, quantity: string, type: 'add' | 'subtract'): Promise<InventoryItem | undefined> {
+    const item = this.inventoryItems.get(id);
+    if (!item) return undefined;
+
+    const currentStock = parseFloat(item.stock);
+    const quantityChange = parseFloat(quantity);
+    const newStock = type === 'add' ? currentStock + quantityChange : currentStock - quantityChange;
+
+    return this.updateInventoryItem(id, { 
+      stock: newStock.toString(),
+      lastRestocked: type === 'add' ? new Date() : item.lastRestocked,
+      lastUsed: type === 'subtract' ? new Date() : item.lastUsed,
+    });
+  }
+
+  // ============ PURCHASE ORDERS METHODS ============
+
+  async getPurchaseOrders(): Promise<PurchaseOrder[]> {
+    return Array.from(this.purchaseOrders.values());
+  }
+
+  async getPurchaseOrder(id: string): Promise<PurchaseOrder | undefined> {
+    return this.purchaseOrders.get(id);
+  }
+
+  async getPurchaseOrdersBySupplier(supplierId: string): Promise<PurchaseOrder[]> {
+    return Array.from(this.purchaseOrders.values()).filter(po => po.supplierId === supplierId);
+  }
+
+  async getPurchaseOrdersByStatus(status: string): Promise<PurchaseOrder[]> {
+    return Array.from(this.purchaseOrders.values()).filter(po => po.status === status);
+  }
+
+  async createPurchaseOrder(data: InsertPurchaseOrder): Promise<PurchaseOrder> {
+    const po: PurchaseOrder = {
+      id: randomUUID(),
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.purchaseOrders.set(po.id, po);
+    return po;
+  }
+
+  async updatePurchaseOrder(id: string, data: Partial<InsertPurchaseOrder>): Promise<PurchaseOrder | undefined> {
+    const po = this.purchaseOrders.get(id);
+    if (!po) return undefined;
+
+    const updated: PurchaseOrder = {
+      ...po,
+      ...data,
+      updatedAt: new Date(),
+    };
+    this.purchaseOrders.set(id, updated);
+    return updated;
+  }
+
+  async deletePurchaseOrder(id: string): Promise<boolean> {
+    return this.purchaseOrders.delete(id);
+  }
+
+  async getNextPONumber(): Promise<string> {
+    const pos = await this.getPurchaseOrders();
+    const year = new Date().getFullYear();
+    const maxNum = pos
+      .filter(po => po.poNumber.startsWith(`PO-${year}-`))
+      .map(po => parseInt(po.poNumber.split('-')[2]))
+      .reduce((max, num) => Math.max(max, num), 0);
+    return `PO-${year}-${String(maxNum + 1).padStart(3, '0')}`;
+  }
+
+  // ============ INVENTORY TRANSACTIONS METHODS ============
+
+  async getInventoryTransactions(): Promise<InventoryTransaction[]> {
+    return Array.from(this.inventoryTransactions.values());
+  }
+
+  async getInventoryTransaction(id: string): Promise<InventoryTransaction | undefined> {
+    return this.inventoryTransactions.get(id);
+  }
+
+  async getTransactionsByItem(itemId: string): Promise<InventoryTransaction[]> {
+    return Array.from(this.inventoryTransactions.values()).filter(t => t.itemId === itemId);
+  }
+
+  async getTransactionsByJob(jobId: string): Promise<InventoryTransaction[]> {
+    return Array.from(this.inventoryTransactions.values()).filter(t => t.jobId === jobId);
+  }
+
+  async getTransactionsByType(type: string): Promise<InventoryTransaction[]> {
+    return Array.from(this.inventoryTransactions.values()).filter(t => t.type === type);
+  }
+
+  async createInventoryTransaction(data: InsertInventoryTransaction): Promise<InventoryTransaction> {
+    const transaction: InventoryTransaction = {
+      id: randomUUID(),
+      ...data,
+      createdAt: new Date(),
+    };
+    this.inventoryTransactions.set(transaction.id, transaction);
+    return transaction;
+  }
+
+  // ============ PARTS USAGE METHODS ============
+
+  async getPartsUsage(): Promise<PartsUsage[]> {
+    return Array.from(this.partsUsage.values());
+  }
+
+  async getPartsUsageByJob(jobId: string): Promise<PartsUsage[]> {
+    return Array.from(this.partsUsage.values()).filter(pu => pu.jobId === jobId);
+  }
+
+  async getPartsUsageByItem(itemId: string): Promise<PartsUsage[]> {
+    return Array.from(this.partsUsage.values()).filter(pu => pu.itemId === itemId);
+  }
+
+  async createPartsUsage(data: InsertPartsUsage): Promise<PartsUsage> {
+    const usage: PartsUsage = {
+      id: randomUUID(),
+      ...data,
+      createdAt: new Date(),
+    };
+    this.partsUsage.set(usage.id, usage);
+    return usage;
+  }
+
+  async deletePartsUsage(id: string): Promise<boolean> {
+    return this.partsUsage.delete(id);
+  }
 }
 
 export const storage = new MemStorage();
