@@ -31,8 +31,21 @@ export interface IStorage {
   // Documents
   getDocuments(): Promise<Document[]>;
   getDocument(id: string): Promise<Document | undefined>;
+  searchDocuments(query: string): Promise<Document[]>;
+  filterDocuments(filters: {
+    type?: string;
+    category?: string;
+    startDate?: Date;
+    endDate?: Date;
+    studentId?: string;
+    clientId?: string;
+    staffId?: string;
+  }): Promise<Document[]>;
+  getDocumentsByCategory(category: string): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
+  updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined>;
   deleteDocument(id: string): Promise<boolean>;
+  bulkDeleteDocuments(ids: string[]): Promise<number>;
   
   // Staff
   getStaff(): Promise<Staff[]>;
