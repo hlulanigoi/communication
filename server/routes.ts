@@ -13,6 +13,7 @@ import {
   insertTestimonialSchema,
   insertHRNoteSchema,
   insertCertificateSchema,
+  insertJobSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(
