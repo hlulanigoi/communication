@@ -40,6 +40,7 @@ interface SavedInspection {
 
 export default function DVI() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [currentInspection, setCurrentInspection] = useState<VehicleInspectionData>(createEmptyInspection());
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
