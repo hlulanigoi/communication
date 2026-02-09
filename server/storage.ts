@@ -209,6 +209,11 @@ export class MemStorage implements IStorage {
   private vehicleInspections: Map<string, VehicleInspection>;
   private inspectionMedia: Map<string, InspectionMedia>;
   private jobs: Map<string, Job>;
+  private suppliers: Map<string, Supplier>;
+  private inventoryItems: Map<string, InventoryItem>;
+  private purchaseOrders: Map<string, PurchaseOrder>;
+  private inventoryTransactions: Map<string, InventoryTransaction>;
+  private partsUsage: Map<string, PartsUsage>;
 
   constructor() {
     this.users = new Map();
@@ -225,6 +230,11 @@ export class MemStorage implements IStorage {
     this.vehicleInspections = new Map();
     this.inspectionMedia = new Map();
     this.jobs = new Map();
+    this.suppliers = new Map();
+    this.inventoryItems = new Map();
+    this.purchaseOrders = new Map();
+    this.inventoryTransactions = new Map();
+    this.partsUsage = new Map();
     
     // Seed some initial data for testing
     this.seedData();
