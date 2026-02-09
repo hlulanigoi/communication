@@ -334,6 +334,66 @@ export class MemStorage implements IStorage {
     sampleExpenses.forEach(expense => {
       this.operatingExpenses.set(expense.id, expense);
     });
+
+    // Get client IDs for vehicle seeding
+    const clientIds = Array.from(this.clients.values()).map(c => c.id);
+    const staffIds = Array.from(this.staff.values()).map(s => s.id);
+
+    // Seed vehicle data
+    const sampleVehicles: Vehicle[] = [
+      {
+        id: randomUUID(),
+        vin: "1HGBH41JXMN109186",
+        make: "Honda",
+        model: "Civic",
+        year: "2021",
+        licensePlate: "ABC-1234",
+        color: "Silver",
+        mileage: "45000",
+        clientId: clientIds[0] || null,
+        clientName: "John Smith",
+        status: "Active",
+        notes: "Regular maintenance customer",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        vin: "5FNRL5H40JB123456",
+        make: "Toyota",
+        model: "Camry",
+        year: "2020",
+        licensePlate: "XYZ-5678",
+        color: "Blue",
+        mileage: "62000",
+        clientId: clientIds[1] || null,
+        clientName: "ABC Fleet Services",
+        status: "In Service",
+        notes: "Fleet vehicle - regular inspections",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        vin: "2T1BURHE0JC987654",
+        make: "Ford",
+        model: "F-150",
+        year: "2019",
+        licensePlate: "TRK-9999",
+        color: "Red",
+        mileage: "78000",
+        clientId: clientIds[0] || null,
+        clientName: "John Smith",
+        status: "Active",
+        notes: "Work truck - heavy use",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    sampleVehicles.forEach(vehicle => {
+      this.vehicles.set(vehicle.id, vehicle);
+    });
   }
 
   // User methods
