@@ -113,7 +113,11 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm">
+          <Card 
+            key={i} 
+            data-testid={`stat-card-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
+            className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm"
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-bold text-muted-foreground font-display tracking-widest uppercase">
                 {stat.label}
@@ -122,10 +126,10 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="h-8 bg-secondary/10 animate-pulse rounded" />
+                <div className="h-8 bg-secondary/10 animate-pulse rounded" data-testid="stat-loading" />
               ) : (
                 <>
-                  <div className="text-3xl font-black font-display text-glow-red">{stat.value}</div>
+                  <div className="text-3xl font-black font-display text-glow-red" data-testid="stat-value">{stat.value}</div>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono">
                     <span className={stat.change.startsWith('+') ? "text-emerald-500" : "text-primary font-bold"}>
                       {stat.change}
