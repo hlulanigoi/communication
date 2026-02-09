@@ -444,10 +444,6 @@ export async function registerRoutes(
       });
 
       res.status(201).json(document);
-        metadata: JSON.stringify({ reportType, dateRange: dateRange || defaultDateRange }),
-      });
-
-      res.status(201).json(document);
     } catch (error: any) {
       console.error("Compliance report generation error:", error);
       res.status(500).json({ message: error.message });
