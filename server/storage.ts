@@ -13,6 +13,11 @@ import {
   type VehicleInspection, type InsertVehicleInspection,
   type InspectionMedia, type InsertInspectionMedia,
   type Job, type InsertJob,
+  type Supplier, type InsertSupplier,
+  type InventoryItem, type InsertInventoryItem,
+  type PurchaseOrder, type InsertPurchaseOrder,
+  type InventoryTransaction, type InsertInventoryTransaction,
+  type PartsUsage, type InsertPartsUsage,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
