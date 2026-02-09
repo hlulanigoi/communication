@@ -1218,5 +1218,97 @@ export async function registerRoutes(
     }
   });
 
+  // ============ JOBS ROUTES ============
+
+  app.get("/api/jobs", async (_req, res) => {
+    try {
+      const jobs = await storage.getJobs();
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.getJob(req.params.id);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/jobs/by-status/:status", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsByStatus(req.params.status);
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/jobs/by-vehicle/:vehicleId", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsByVehicle(req.params.vehicleId);
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/jobs/by-client/:clientId", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsByClient(req.params.clientId);
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/jobs/by-assignee/:assignedToId", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsByAssignee(req.params.assignedToId);
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/jobs", async (req, res) => {
+    try {
+      const job = await storage.createJob(req.body);
+      res.status(201).json(job);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.updateJob(req.params.id, req.body);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json(job);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/jobs/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteJob(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      res.json({ message: "Job deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 }
