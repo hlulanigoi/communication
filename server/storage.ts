@@ -92,6 +92,30 @@ export interface IStorage {
   createCertificate(certificate: InsertCertificate): Promise<Certificate>;
   updateCertificate(id: string, certificate: Partial<InsertCertificate>): Promise<Certificate | undefined>;
   deleteCertificate(id: string): Promise<boolean>;
+  
+  // Vehicles
+  getVehicles(): Promise<Vehicle[]>;
+  getVehicle(id: string): Promise<Vehicle | undefined>;
+  getVehiclesByClient(clientId: string): Promise<Vehicle[]>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
+  deleteVehicle(id: string): Promise<boolean>;
+  
+  // Vehicle Inspections
+  getVehicleInspections(): Promise<VehicleInspection[]>;
+  getVehicleInspection(id: string): Promise<VehicleInspection | undefined>;
+  getInspectionsByVehicle(vehicleId: string): Promise<VehicleInspection[]>;
+  getInspectionsByInspector(inspectorId: string): Promise<VehicleInspection[]>;
+  getInspectionsByStatus(status: string): Promise<VehicleInspection[]>;
+  createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection>;
+  updateVehicleInspection(id: string, inspection: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined>;
+  deleteVehicleInspection(id: string): Promise<boolean>;
+  
+  // Inspection Media
+  getInspectionMedia(inspectionId: string): Promise<InspectionMedia[]>;
+  getMediaItem(id: string): Promise<InspectionMedia | undefined>;
+  createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia>;
+  deleteInspectionMedia(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
