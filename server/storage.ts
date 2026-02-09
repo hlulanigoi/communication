@@ -174,6 +174,7 @@ export class MemStorage implements IStorage {
     this.vehicles = new Map();
     this.vehicleInspections = new Map();
     this.inspectionMedia = new Map();
+    this.jobs = new Map();
     
     // Seed some initial data for testing
     this.seedData();
