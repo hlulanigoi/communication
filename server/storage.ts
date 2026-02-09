@@ -129,6 +129,9 @@ export class MemStorage implements IStorage {
   private testimonials: Map<string, Testimonial>;
   private hrNotes: Map<string, HRNote>;
   private certificates: Map<string, Certificate>;
+  private vehicles: Map<string, Vehicle>;
+  private vehicleInspections: Map<string, VehicleInspection>;
+  private inspectionMedia: Map<string, InspectionMedia>;
 
   constructor() {
     this.users = new Map();
@@ -141,6 +144,9 @@ export class MemStorage implements IStorage {
     this.testimonials = new Map();
     this.hrNotes = new Map();
     this.certificates = new Map();
+    this.vehicles = new Map();
+    this.vehicleInspections = new Map();
+    this.inspectionMedia = new Map();
     
     // Seed some initial data for testing
     this.seedData();
