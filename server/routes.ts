@@ -321,14 +321,26 @@ export async function registerRoutes(
         issueDate: new Date(),
       });
 
-      // Save document
+      // Save document with enhanced schema
       const document = await storage.createDocument({
         title: `${certificateType} - ${student.name}`,
         type: "Certificate",
+        category: "Student",
+        fileType: "application/pdf",
+        fileName: `${certificateType.replace(/\s+/g, '_')}_${student.name.replace(/\s+/g, '_')}.pdf`,
+        fileSize: Math.ceil(pdfBase64.length * 0.75).toString(), // Approximate size
         studentId: student.id,
         studentName: student.name,
+        clientId: null,
+        staffId: null,
+        clientName: null,
+        staffName: null,
         content: pdfBase64,
         metadata: JSON.stringify({ certificateType }),
+        tags: JSON.stringify(['certificate', 'student', certificateType.toLowerCase()]),
+        description: `Certificate of ${certificateType} for ${student.name}`,
+        uploadedBy: "System",
+        version: "1.0",
       });
 
       res.status(201).json(document);
