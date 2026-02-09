@@ -1010,6 +1010,174 @@ export class MemStorage implements IStorage {
   async deleteInspectionMedia(id: string): Promise<boolean> {
     return this.inspectionMedia.delete(id);
   }
+
+  // ============ JOBS METHODS ============
+
+  async getJobs(): Promise<Job[]> {
+    return Array.from(this.jobs.values()).sort((a, b) => {
+      const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+      const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+      return dateB - dateA; // Newest first
+    });
+  }
+
+  async getJob(id: string): Promise<Job | undefined> {
+    return this.jobs.get(id);
+  }
+
+  async getJobsByStatus(status: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.status === status)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByVehicle(vehicleId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.vehicleId === vehicleId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByClient(clientId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.clientId === clientId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByAssignee(assignedToId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.assignedToId === assignedToId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getNextJobNumber(): Promise<string> {
+    const currentYear = new Date().getFullYear();
+    const jobs = Array.from(this.jobs.values());
+    const yearJobs = jobs.filter(job => 
+      job.jobNumber.startsWith(`J-${currentYear}`)
+    );
+    
+    let maxNumber = 0;
+    yearJobs.forEach(job => {
+      const match = job.jobNumber.match(/J-\d{4}-(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+    
+    const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
+    return `J-${currentYear}-${nextNumber}`;
+  }
+
+  async createJob(jobData: InsertJob): Promise<Job> {
+    const jobNumber = await this.getNextJobNumber();
+    
+    // Get vehicle info if vehicleId provided
+    let vehicleInfo = null;
+    if (jobData.vehicleId) {
+      const vehicle = await this.getVehicle(jobData.vehicleId);
+      if (vehicle) {
+        vehicleInfo = JSON.stringify({
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          plate: vehicle.licensePlate
+        });
+      }
+    }
+    
+    // Get client name if clientId provided
+    let clientName = null;
+    if (jobData.clientId) {
+      const client = await this.getClient(jobData.clientId);
+      clientName = client?.name || null;
+    }
+    
+    // Get assigned staff name if assignedToId provided
+    let assignedToName = null;
+    if (jobData.assignedToId) {
+      const staffMember = await this.getStaffMember(jobData.assignedToId);
+      assignedToName = staffMember?.name || null;
+    }
+    
+    const newJob: Job = {
+      id: randomUUID(),
+      jobNumber,
+      vehicleInfo,
+      clientName,
+      assignedToName,
+      ...jobData,
+      createdDate: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.jobs.set(newJob.id, newJob);
+    return newJob;
+  }
+
+  async updateJob(id: string, jobData: Partial<InsertJob>): Promise<Job | undefined> {
+    const job = this.jobs.get(id);
+    if (!job) return undefined;
+    
+    // Update denormalized fields if IDs changed
+    let vehicleInfo = job.vehicleInfo;
+    let clientName = job.clientName;
+    let assignedToName = job.assignedToName;
+    
+    if (jobData.vehicleId && jobData.vehicleId !== job.vehicleId) {
+      const vehicle = await this.getVehicle(jobData.vehicleId);
+      if (vehicle) {
+        vehicleInfo = JSON.stringify({
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          plate: vehicle.licensePlate
+        });
+      }
+    }
+    
+    if (jobData.clientId && jobData.clientId !== job.clientId) {
+      const client = await this.getClient(jobData.clientId);
+      clientName = client?.name || null;
+    }
+    
+    if (jobData.assignedToId && jobData.assignedToId !== job.assignedToId) {
+      const staffMember = await this.getStaffMember(jobData.assignedToId);
+      assignedToName = staffMember?.name || null;
+    }
+    
+    const updatedJob: Job = {
+      ...job,
+      ...jobData,
+      vehicleInfo,
+      clientName,
+      assignedToName,
+      updatedAt: new Date(),
+    };
+    
+    this.jobs.set(id, updatedJob);
+    return updatedJob;
+  }
+
+  async deleteJob(id: string): Promise<boolean> {
+    return this.jobs.delete(id);
+  }
 }
 
 export const storage = new MemStorage();
