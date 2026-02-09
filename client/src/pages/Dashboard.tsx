@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle } from "lucide-react";
+import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle, User, Info } from "lucide-react";
 import type { Student, Staff, JobInvoice } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -65,29 +65,29 @@ export default function Dashboard() {
       label: "Active Students", 
       value: students.filter(s => s.status === 'Active').length.toString(), 
       change: "+2", 
-      icon: AlertTriangle, 
-      color: "text-blue-500" 
+      icon: User, 
+      color: "text-blue-400 dark:text-blue-400" 
     },
     { 
       label: "Staff Members", 
       value: staff.length.toString(), 
       change: "+1", 
-      icon: ArrowUpRight, 
-      color: "text-amber-500" 
+      icon: CheckCircle2, 
+      color: "text-amber-400 dark:text-amber-400" 
     },
     { 
       label: "Total Invoices", 
       value: invoices.length.toString(), 
       change: `+${invoices.filter(i => i.createdAt && new Date(i.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}`, 
-      icon: AlertTriangle, 
-      color: "text-emerald-500" 
+      icon: Info, 
+      color: "text-emerald-400 dark:text-emerald-400" 
     },
     { 
       label: "Pending Invoices", 
-      value: invoices.filter(i => i.status === 'Pending').length.toString(), 
+      value: invoices.filter(i => (i as any).status === 'Pending').length.toString(), 
       change: "0", 
-      icon: AlertTriangle, 
-      color: "text-rose-500" 
+      icon: Clock, 
+      color: "text-rose-400 dark:text-rose-400" 
     },
   ];
 
@@ -144,23 +144,39 @@ export default function Dashboard() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Main Chart Area */}
-        <Card className="col-span-4 border-2 border-border/50 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-4 flex gap-2">
-            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-[9px] font-black">LIVE DIAGNOSTICS</Badge>
+        <Card className="col-span-4 industrial-border bg-card/40 backdrop-blur-sm overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 flex gap-2 z-10">
+            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-[9px] font-black border-primary/20">LIVE DIAGNOSTICS</Badge>
           </div>
           <CardHeader className="bg-muted/10 border-b border-border/50">
-            <CardTitle className="text-sm italic">WORKSHOP THROUGHPUT & LOAD</CardTitle>
-            <CardDescription className="text-[10px] font-bold uppercase tracking-tight">Real-time efficiency monitoring</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm italic uppercase tracking-wider">Workshop Throughput & Load</CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase tracking-tight mt-1">Real-time efficiency monitoring</CardDescription>
+              </div>
+              <div className="flex items-center gap-1.5 bg-background/50 border border-border/50 px-2 py-1 rounded">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[9px] font-black font-mono">LIVE FEED</span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="pl-2 pt-6">
             <div className="h-[300px] flex items-end justify-between gap-3 p-4 pt-10 relative">
+              {/* Grid Lines */}
+              <div className="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none opacity-10">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="w-full border-t border-foreground" />
+                ))}
+              </div>
               {/* Scanline effect */}
               <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none opacity-20" />
               {[40, 65, 45, 80, 55, 90, 75].map((h, i) => (
-                <div key={i} className="w-full bg-secondary/30 relative group/bar transition-all duration-500" style={{ height: `${h}%` }}>
-                  <div className="absolute inset-x-0 bottom-0 bg-primary group-hover/bar:bg-primary/80 transition-all shadow-[0_0_15px_rgba(20,184,166,0.3)]" style={{ height: `${Math.random() * 20 + 80}%` }} />
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-primary text-[9px] font-black py-1 px-2 border border-primary/50 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono">
-                    LVL: {h}%
+                <div key={i} className="w-full bg-secondary/30 relative group/bar transition-all duration-500 rounded-t-sm" style={{ height: `${h}%` }}>
+                  <div className="absolute inset-x-0 bottom-0 bg-primary group-hover/bar:bg-primary/80 transition-all shadow-[0_0_20px_rgba(226,35,26,0.4)]" style={{ height: `${Math.random() * 20 + 80}%` }}>
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/40" />
+                  </div>
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-primary text-[9px] font-black py-1 px-2 border border-primary/50 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono shadow-xl">
+                    CAPACITY: {h}%
                   </div>
                 </div>
               ))}
@@ -171,14 +187,14 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 border-2 border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/20">
-            <CardTitle className="text-sm">URGENT SERVICE TICKETS</CardTitle>
+        <Card className="col-span-3 border-2 border-border/50 bg-card/30 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/10">
+            <CardTitle className="text-sm font-display tracking-widest uppercase italic">Urgent Service Tickets</CardTitle>
             <Button 
               onClick={() => setLocation('/job-board')}
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
-              className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter"
+              className="text-[9px] h-7 px-3 font-black uppercase tracking-widest border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all"
             >
               Manage Queue
             </Button>
