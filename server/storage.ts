@@ -142,6 +142,51 @@ export interface IStorage {
   updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
   deleteJob(id: string): Promise<boolean>;
   getNextJobNumber(): Promise<string>;
+  
+  // Suppliers
+  getSuppliers(): Promise<Supplier[]>;
+  getSupplier(id: string): Promise<Supplier | undefined>;
+  getSuppliersByStatus(status: string): Promise<Supplier[]>;
+  createSupplier(supplier: InsertSupplier): Promise<Supplier>;
+  updateSupplier(id: string, supplier: Partial<InsertSupplier>): Promise<Supplier | undefined>;
+  deleteSupplier(id: string): Promise<boolean>;
+  
+  // Inventory Items
+  getInventoryItems(): Promise<InventoryItem[]>;
+  getInventoryItem(id: string): Promise<InventoryItem | undefined>;
+  getInventoryItemsByCategory(category: string): Promise<InventoryItem[]>;
+  getInventoryItemsBySupplier(supplierId: string): Promise<InventoryItem[]>;
+  getLowStockItems(): Promise<InventoryItem[]>;
+  searchInventoryItems(query: string): Promise<InventoryItem[]>;
+  createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
+  updateInventoryItem(id: string, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined>;
+  deleteInventoryItem(id: string): Promise<boolean>;
+  updateItemStock(id: string, quantity: string, type: 'add' | 'subtract'): Promise<InventoryItem | undefined>;
+  
+  // Purchase Orders
+  getPurchaseOrders(): Promise<PurchaseOrder[]>;
+  getPurchaseOrder(id: string): Promise<PurchaseOrder | undefined>;
+  getPurchaseOrdersBySupplier(supplierId: string): Promise<PurchaseOrder[]>;
+  getPurchaseOrdersByStatus(status: string): Promise<PurchaseOrder[]>;
+  createPurchaseOrder(po: InsertPurchaseOrder): Promise<PurchaseOrder>;
+  updatePurchaseOrder(id: string, po: Partial<InsertPurchaseOrder>): Promise<PurchaseOrder | undefined>;
+  deletePurchaseOrder(id: string): Promise<boolean>;
+  getNextPONumber(): Promise<string>;
+  
+  // Inventory Transactions
+  getInventoryTransactions(): Promise<InventoryTransaction[]>;
+  getInventoryTransaction(id: string): Promise<InventoryTransaction | undefined>;
+  getTransactionsByItem(itemId: string): Promise<InventoryTransaction[]>;
+  getTransactionsByJob(jobId: string): Promise<InventoryTransaction[]>;
+  getTransactionsByType(type: string): Promise<InventoryTransaction[]>;
+  createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction>;
+  
+  // Parts Usage
+  getPartsUsage(): Promise<PartsUsage[]>;
+  getPartsUsageByJob(jobId: string): Promise<PartsUsage[]>;
+  getPartsUsageByItem(itemId: string): Promise<PartsUsage[]>;
+  createPartsUsage(usage: InsertPartsUsage): Promise<PartsUsage>;
+  deletePartsUsage(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
