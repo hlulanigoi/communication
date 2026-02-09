@@ -9,6 +9,9 @@ import {
   type Testimonial, type InsertTestimonial,
   type HRNote, type InsertHRNote,
   type Certificate, type InsertCertificate,
+  type Vehicle, type InsertVehicle,
+  type VehicleInspection, type InsertVehicleInspection,
+  type InspectionMedia, type InsertInspectionMedia,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
