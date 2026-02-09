@@ -83,7 +83,7 @@ export default function Dashboard() {
     },
     { 
       label: "Pending Invoices", 
-      value: invoices.filter(i => i.status === 'Pending').length.toString(), 
+      value: invoices.filter(i => i.paymentStatus === 'Unpaid' || i.paymentStatus === 'Partial').length.toString(), 
       change: "0", 
       icon: AlertTriangle, 
       color: "text-rose-500" 
