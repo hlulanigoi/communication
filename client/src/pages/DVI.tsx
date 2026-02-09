@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { CheckCircle2, AlertCircle, XCircle, Camera, Smartphone, Send, ShieldCheck, Save, FileText, Upload, X, Plus, Eye } from 'lucide-react';
 import { defaultInspectionSections, createEmptyInspection, type VehicleInspectionData, type InspectionSection, type InspectionItem } from '@/data/inspectionData';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface Vehicle {
   id: string;
