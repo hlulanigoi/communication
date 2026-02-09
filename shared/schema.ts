@@ -403,3 +403,207 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
 
 export type InsertJob = z.infer<typeof insertJobSchema>;
 export type Job = typeof jobs.$inferSelect;
+
+// ============ INVENTORY MANAGEMENT TABLES ============
+
+// Suppliers table
+export const suppliers = pgTable("suppliers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  contactPerson: text("contact_person"),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  city: text("city"),
+  country: text("country"),
+  website: text("website"),
+  paymentTerms: text("payment_terms"), // e.g., "Net 30", "COD"
+  rating: text("rating"), // Supplier performance rating
+  notes: text("notes"),
+  status: text("status").notNull().default('Active'), // Active, Inactive
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type Supplier = typeof suppliers.$inferSelect;
+
+// Inventory Items table
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sku: text("sku").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // "Brakes", "Filters", "Fluids", "Ignition", "Body Parts", etc.
+  subcategory: text("subcategory"),
+  
+  // Stock management
+  stock: text("stock").notNull().default("0"), // Current stock quantity
+  minStock: text("min_stock").notNull().default("5"), // Minimum stock level
+  maxStock: text("max_stock").notNull().default("100"), // Maximum stock level
+  reorderPoint: text("reorder_point").notNull().default("10"), // When to reorder
+  reorderQuantity: text("reorder_quantity").notNull().default("20"), // How much to reorder
+  
+  // Pricing
+  unitPrice: text("unit_price").notNull().default("0"), // Selling price
+  costPrice: text("cost_price").notNull().default("0"), // Purchase cost
+  markup: text("markup").default("0"), // Markup percentage
+  
+  // Supplier information
+  supplierId: varchar("supplier_id").references(() => suppliers.id, { onDelete: 'set null' }),
+  supplierName: text("supplier_name"),
+  supplierSku: text("supplier_sku"), // Supplier's SKU for this item
+  
+  // Physical details
+  location: text("location"), // Warehouse location (e.g., "A-12-3")
+  barcode: text("barcode"),
+  unit: text("unit").notNull().default("piece"), // "piece", "liter", "kg", "box", etc.
+  weight: text("weight"), // For shipping calculations
+  
+  // Tracking
+  lastRestocked: timestamp("last_restocked"),
+  lastUsed: timestamp("last_used"),
+  totalUsage: text("total_usage").default("0"), // Lifetime usage count
+  
+  // Status and metadata
+  status: text("status").notNull().default('Active'), // Active, Discontinued, Out of Stock
+  isLowStock: text("is_low_stock").default('false'), // Computed flag
+  tags: text("tags"), // JSON array for flexible categorization
+  images: text("images"), // JSON array of image URLs
+  warranty: text("warranty"), // Warranty information
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+
+// Purchase Orders table
+export const purchaseOrders = pgTable("purchase_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poNumber: text("po_number").notNull().unique(), // e.g., "PO-2024-001"
+  supplierId: varchar("supplier_id").notNull().references(() => suppliers.id, { onDelete: 'restrict' }),
+  supplierName: text("supplier_name").notNull(), // Denormalized
+  
+  // Order details
+  items: text("items").notNull(), // JSON array of {itemId, itemName, sku, quantity, unitPrice, total}
+  subtotal: text("subtotal").notNull().default("0"),
+  taxRate: text("tax_rate").default("0"),
+  taxAmount: text("tax_amount").default("0"),
+  shippingCost: text("shipping_cost").default("0"),
+  totalAmount: text("total_amount").notNull(),
+  
+  // Status and dates
+  status: text("status").notNull().default('Draft'), // Draft, Sent, Confirmed, Partially Received, Received, Cancelled
+  orderDate: timestamp("order_date").defaultNow(),
+  expectedDeliveryDate: timestamp("expected_delivery_date"),
+  actualDeliveryDate: timestamp("actual_delivery_date"),
+  
+  // Additional info
+  orderedBy: text("ordered_by"), // Staff member who created the order
+  receivedBy: text("received_by"), // Staff member who received the order
+  paymentStatus: text("payment_status").default('Pending'), // Pending, Paid, Partial
+  paymentMethod: text("payment_method"),
+  notes: text("notes"),
+  attachments: text("attachments"), // JSON array of file URLs
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+
+// Inventory Transactions table - tracks all stock movements
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  itemId: varchar("item_id").notNull().references(() => inventoryItems.id, { onDelete: 'cascade' }),
+  itemName: text("item_name").notNull(), // Denormalized
+  itemSku: text("item_sku").notNull(), // Denormalized
+  
+  // Transaction details
+  type: text("type").notNull(), // "purchase", "usage", "adjustment", "return", "transfer", "damaged"
+  quantity: text("quantity").notNull(), // Positive for additions, negative for reductions
+  quantityBefore: text("quantity_before").notNull(), // Stock before transaction
+  quantityAfter: text("quantity_after").notNull(), // Stock after transaction
+  
+  // Cost tracking
+  unitCost: text("unit_cost").default("0"),
+  totalCost: text("total_cost").default("0"),
+  
+  // Reference to related entities
+  referenceType: text("reference_type"), // "job", "purchase_order", "adjustment", "manual"
+  referenceId: text("reference_id"), // ID of the related entity
+  jobId: varchar("job_id").references(() => jobs.id, { onDelete: 'set null' }),
+  purchaseOrderId: varchar("purchase_order_id").references(() => purchaseOrders.id, { onDelete: 'set null' }),
+  
+  // Who and when
+  performedBy: text("performed_by").notNull(), // Staff member who performed the transaction
+  transactionDate: timestamp("transaction_date").defaultNow(),
+  
+  // Additional info
+  reason: text("reason"), // Reason for adjustment, damage, etc.
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertInventoryTransaction = z.infer<typeof insertInventoryTransactionSchema>;
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+
+// Parts Usage table - links parts to jobs
+export const partsUsage = pgTable("parts_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull().references(() => jobs.id, { onDelete: 'cascade' }),
+  jobNumber: text("job_number"), // Denormalized
+  
+  itemId: varchar("item_id").notNull().references(() => inventoryItems.id, { onDelete: 'restrict' }),
+  itemName: text("item_name").notNull(), // Denormalized
+  itemSku: text("item_sku").notNull(), // Denormalized
+  
+  quantity: text("quantity").notNull(),
+  unitPrice: text("unit_price").notNull(), // Price charged to customer
+  unitCost: text("unit_cost").notNull(), // Cost to business
+  totalPrice: text("total_price").notNull(), // Total charged to customer
+  totalCost: text("total_cost").notNull(), // Total cost to business
+  profit: text("profit").notNull(), // totalPrice - totalCost
+  
+  usedBy: text("used_by"), // Staff member who used the part
+  usedDate: timestamp("used_date").defaultNow(),
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPartsUsageSchema = createInsertSchema(partsUsage).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPartsUsage = z.infer<typeof insertPartsUsageSchema>;
+export type PartsUsage = typeof partsUsage.$inferSelect;
