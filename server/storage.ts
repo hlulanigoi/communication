@@ -130,6 +130,18 @@ export interface IStorage {
   getMediaItem(id: string): Promise<InspectionMedia | undefined>;
   createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia>;
   deleteInspectionMedia(id: string): Promise<boolean>;
+  
+  // Jobs
+  getJobs(): Promise<Job[]>;
+  getJob(id: string): Promise<Job | undefined>;
+  getJobsByStatus(status: string): Promise<Job[]>;
+  getJobsByVehicle(vehicleId: string): Promise<Job[]>;
+  getJobsByClient(clientId: string): Promise<Job[]>;
+  getJobsByAssignee(assignedToId: string): Promise<Job[]>;
+  createJob(job: InsertJob): Promise<Job>;
+  updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
+  deleteJob(id: string): Promise<boolean>;
+  getNextJobNumber(): Promise<string>;
 }
 
 export class MemStorage implements IStorage {
