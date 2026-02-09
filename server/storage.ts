@@ -423,8 +423,7 @@ export class MemStorage implements IStorage {
       this.vehicles.set(vehicle.id, vehicle);
     });
 
-    // Seed job data
-    const staffIds = Array.from(this.staff.keys());
+    // Seed job data (using staffIds and clientIds already declared above)
     const vehicleIds = Array.from(this.vehicles.keys());
     
     if (staffIds.length > 0 && vehicleIds.length > 0 && clientIds.length > 0) {
