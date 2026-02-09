@@ -371,14 +371,26 @@ export async function registerRoutes(
         achievements: achievements || [],
       });
 
-      // Save document
+      // Save document with enhanced schema
       const document = await storage.createDocument({
         title: `Placement Completion Letter - ${student.name}`,
         type: "Placement Letter",
+        category: "Student",
+        fileType: "application/pdf",
+        fileName: `Placement_Letter_${student.name.replace(/\s+/g, '_')}.pdf`,
+        fileSize: Math.ceil(pdfBase64.length * 0.75).toString(),
         studentId: student.id,
         studentName: student.name,
+        clientId: null,
+        staffId: null,
+        clientName: null,
+        staffName: null,
         content: pdfBase64,
         metadata: JSON.stringify({ achievements }),
+        tags: JSON.stringify(['placement', 'letter', 'student']),
+        description: `Placement completion letter for ${student.name}`,
+        uploadedBy: "System",
+        version: "1.0",
       });
 
       res.status(201).json(document);
