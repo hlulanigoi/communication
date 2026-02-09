@@ -691,6 +691,148 @@ export class MemStorage implements IStorage {
   async deleteCertificate(id: string): Promise<boolean> {
     return this.certificates.delete(id);
   }
+
+  // ============ VEHICLES METHODS ============
+  
+  async getVehicles(): Promise<Vehicle[]> {
+    return Array.from(this.vehicles.values());
+  }
+
+  async getVehicle(id: string): Promise<Vehicle | undefined> {
+    return this.vehicles.get(id);
+  }
+
+  async getVehiclesByClient(clientId: string): Promise<Vehicle[]> {
+    return Array.from(this.vehicles.values())
+      .filter(v => v.clientId === clientId);
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const newVehicle: Vehicle = {
+      id: randomUUID(),
+      ...vehicle,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicles.set(newVehicle.id, newVehicle);
+    return newVehicle;
+  }
+
+  async updateVehicle(id: string, updates: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    const vehicle = this.vehicles.get(id);
+    if (!vehicle) return undefined;
+    
+    const updatedVehicle = { 
+      ...vehicle, 
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.vehicles.set(id, updatedVehicle);
+    return updatedVehicle;
+  }
+
+  async deleteVehicle(id: string): Promise<boolean> {
+    return this.vehicles.delete(id);
+  }
+
+  // ============ VEHICLE INSPECTIONS METHODS ============
+  
+  async getVehicleInspections(): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA; // Most recent first
+      });
+  }
+
+  async getVehicleInspection(id: string): Promise<VehicleInspection | undefined> {
+    return this.vehicleInspections.get(id);
+  }
+
+  async getInspectionsByVehicle(vehicleId: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.vehicleId === vehicleId)
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getInspectionsByInspector(inspectorId: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.inspectorId === inspectorId)
+      .sort((a, b) => {
+        const dateA = a.inspectionDate ? new Date(a.inspectionDate).getTime() : 0;
+        const dateB = b.inspectionDate ? new Date(b.inspectionDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getInspectionsByStatus(status: string): Promise<VehicleInspection[]> {
+    return Array.from(this.vehicleInspections.values())
+      .filter(i => i.overallStatus === status);
+  }
+
+  async createVehicleInspection(inspection: InsertVehicleInspection): Promise<VehicleInspection> {
+    const newInspection: VehicleInspection = {
+      id: randomUUID(),
+      ...inspection,
+      inspectionDate: inspection.inspectionDate || new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicleInspections.set(newInspection.id, newInspection);
+    return newInspection;
+  }
+
+  async updateVehicleInspection(id: string, updates: Partial<InsertVehicleInspection>): Promise<VehicleInspection | undefined> {
+    const inspection = this.vehicleInspections.get(id);
+    if (!inspection) return undefined;
+    
+    const updatedInspection = { 
+      ...inspection, 
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.vehicleInspections.set(id, updatedInspection);
+    return updatedInspection;
+  }
+
+  async deleteVehicleInspection(id: string): Promise<boolean> {
+    return this.vehicleInspections.delete(id);
+  }
+
+  // ============ INSPECTION MEDIA METHODS ============
+  
+  async getInspectionMedia(inspectionId: string): Promise<InspectionMedia[]> {
+    return Array.from(this.inspectionMedia.values())
+      .filter(m => m.inspectionId === inspectionId)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getMediaItem(id: string): Promise<InspectionMedia | undefined> {
+    return this.inspectionMedia.get(id);
+  }
+
+  async createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia> {
+    const newMedia: InspectionMedia = {
+      id: randomUUID(),
+      ...media,
+      createdAt: new Date(),
+    };
+    this.inspectionMedia.set(newMedia.id, newMedia);
+    return newMedia;
+  }
+
+  async deleteInspectionMedia(id: string): Promise<boolean> {
+    return this.inspectionMedia.delete(id);
+  }
 }
 
 export const storage = new MemStorage();
