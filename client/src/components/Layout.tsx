@@ -13,7 +13,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const saved = localStorage.getItem('theme');
+      if (saved) return saved as 'light' | 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'light';
   });
@@ -123,7 +125,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Input 
                 type="search" 
                 placeholder="Search VIN, Client, Job ID..." 
-                className="pl-9 h-9 bg-secondary/50 border-transparent focus:border-primary/50 focus:bg-background transition-all font-mono text-sm"
+                className="pl-9 h-9 bg-secondary/5 border-transparent focus:border-primary/50 focus:bg-background transition-all font-mono text-sm"
               />
             </div>
             
@@ -143,7 +145,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full animate-pulse" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
             </Button>
 
             {/* Notifications Dropdown Panel */}

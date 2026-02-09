@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Rajdhani', sans-serif;
 
   --color-background: hsl(var(--background));
@@ -55,108 +55,101 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* 
-  Theme: JustFix Auto Electrix
-  Branding: Red (#E2231A), Black (#1A1A1A), Grey (#6D6E71)
-*/
 :root {
-  /* Base - Clean White/Light Grey background like the logo */
-  --background: 0 0% 98%; 
-  --foreground: 0 0% 10%;
+  /* Elevated Light Mode - Industrial Precision */
+  --background: 210 20% 98%; 
+  --foreground: 222 47% 11%;
 
-  /* Cards */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
+  --card-foreground: 222 47% 11%;
 
-  /* Popovers */
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
+  --popover-foreground: 222 47% 11%;
 
-  /* Primary - JustFix Red */
-  --primary: 2 80% 50%;
-  --primary-foreground: 0 0% 100%;
+  /* JustFix Performance Red */
+  --primary: 354 75% 52%;
+  --primary-foreground: 210 40% 98%;
 
-  /* Secondary - JustFix Black/Dark Grey */
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
+  /* Workshop Charcoal */
+  --secondary: 222 47% 11%;
+  --secondary-foreground: 210 40% 98%;
 
-  /* Muted - Logo Grey */
-  --muted: 225 3% 43%;
-  --muted-foreground: 225 3% 43%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
 
-  /* Accent - Red highlight */
-  --accent: 2 80% 50%; 
-  --accent-foreground: 0 0% 100%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222 47% 11%;
 
-  /* Destructive */
-  --destructive: 0 84% 60%;
+  --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
 
-  /* Borders & Inputs */
-  --border: 0 0% 89%;
-  --input: 0 0% 89%;
-  --ring: 2 80% 50%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 354 75% 52%;
 
-  /* Chart Colors - Using brand palette */
-  --chart-1: 2 80% 50%;  /* Red */
-  --chart-2: 0 0% 15%;   /* Black */
-  --chart-3: 225 3% 43%; /* Grey */
-  --chart-4: 0 0% 60%;
-  --chart-5: 2 60% 70%;
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 354 75% 52%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 17.5%;
+  --sidebar-ring: 354 75% 52%;
 
-  /* Sidebar - Dark theme for contrast like the 'Fix' part of logo */
-  --sidebar: 0 0% 10%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-primary: 2 80% 50%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 20%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 20%;
-  --sidebar-ring: 2 80% 50%;
-
-  --radius: 0.125rem; /* Even sharper corners to match the blocky 'Fix' font */
+  --radius: 0.25rem;
 }
 
-/* Dark Mode - Inverted Workshop */
 .dark {
-  --background: 0 0% 8%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 12%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 12%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 2 80% 55%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 20%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 225 3% 30%;
-  --muted-foreground: 225 3% 60%;
-  --accent: 2 80% 55%;
-  --accent-foreground: 0 0% 100%;
-  --border: 0 0% 20%;
-  --input: 0 0% 20%;
-  --ring: 2 80% 55%;
-  --sidebar: 0 0% 5%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-primary: 2 80% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 15%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 15%;
-  --sidebar-ring: 2 80% 55%;
+  /* High-Performance Dark Mode - "After Hours" Workshop */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 354 75% 52%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 354 75% 52%;
+
+  --sidebar: 222.2 84% 2%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 354 75% 52%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 12%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 12%;
+  --sidebar-ring: 354 75% 52%;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  /* Typography Scale Overrides */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold tracking-tight uppercase;
+    @apply font-display font-bold tracking-tight uppercase;
   }
 }
 
@@ -166,28 +159,43 @@
   }
   
   .glass-card {
-    @apply bg-background/60 backdrop-blur-md border border-border/50;
+    @apply bg-card/50 backdrop-blur-xl border border-border/40 shadow-sm;
   }
 
   .industrial-border {
-    @apply border-2 border-primary/20 relative overflow-hidden transition-all hover:border-primary/40;
+    @apply border-2 border-primary/10 relative overflow-hidden transition-all hover:border-primary/30;
     &::after {
       content: '';
-      @apply absolute top-0 left-0 w-1 h-full bg-primary;
+      @apply absolute top-0 left-0 w-1 h-full bg-primary shadow-[0_0_15px_rgba(226,35,26,0.6)];
     }
   }
 
   .text-glow-red {
-    text-shadow: 0 0 10px hsla(var(--primary), 0.4);
+    text-shadow: 0 0 15px hsla(var(--primary), 0.4);
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-muted/10;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted/20 rounded-full hover:bg-muted/40 transition-colors;
+    @apply bg-muted/30 rounded-full hover:bg-primary/50 transition-colors;
   }
+}
+
+/* Micro-interactions */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(226, 35, 26, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(226, 35, 26, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(226, 35, 26, 0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
 }
