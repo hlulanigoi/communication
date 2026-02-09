@@ -349,3 +349,57 @@ export const insertInspectionMediaSchema = createInsertSchema(inspectionMedia).o
 
 export type InsertInspectionMedia = z.infer<typeof insertInspectionMediaSchema>;
 export type InspectionMedia = typeof inspectionMedia.$inferSelect;
+
+// ============ JOBS TABLE ============
+export const jobs = pgTable("jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobNumber: text("job_number").notNull().unique(), // e.g., "J-2024-001"
+  
+  // Links to other entities
+  vehicleId: varchar("vehicle_id").references(() => vehicles.id, { onDelete: 'set null' }),
+  clientId: varchar("client_id").references(() => clients.id, { onDelete: 'set null' }),
+  assignedToId: varchar("assigned_to_id").references(() => staff.id, { onDelete: 'set null' }),
+  inspectionId: varchar("inspection_id").references(() => vehicleInspections.id, { onDelete: 'set null' }),
+  
+  // Denormalized for quick access
+  vehicleInfo: text("vehicle_info"), // JSON: {make, model, year, plate}
+  clientName: text("client_name"),
+  assignedToName: text("assigned_to_name"),
+  
+  // Job details
+  type: text("type").notNull(), // "Maintenance", "Repair", "Inspection", "Detailing", "Diagnostic"
+  description: text("description").notNull(),
+  status: text("status").notNull().default('Pending'), // "Pending", "In Progress", "Waiting Parts", "Completed", "Cancelled"
+  priority: text("priority").notNull().default('Medium'), // "Low", "Medium", "High", "Urgent"
+  
+  // Timeline
+  createdDate: timestamp("created_date").defaultNow(),
+  scheduledDate: timestamp("scheduled_date"),
+  startedDate: timestamp("started_date"),
+  completedDate: timestamp("completed_date"),
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  
+  // Financial
+  estimatedCost: text("estimated_cost").default("0"), // Stored as string for precision
+  actualCost: text("actual_cost").default("0"),
+  laborHours: text("labor_hours").default("0"),
+  
+  // Additional details
+  partsNeeded: text("parts_needed"), // JSON array of parts
+  notes: text("notes"), // Customer-facing notes
+  internalNotes: text("internal_notes"), // Internal staff notes
+  
+  // Metadata
+  invoiceId: varchar("invoice_id").references(() => jobInvoices.id, { onDelete: 'set null' }),
+  createdBy: text("created_by"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertJobSchema = createInsertSchema(jobs).omit({
+  id: true,
+  createdDate: true,
+  updatedAt: true,
+});
+
+export type InsertJob = z.infer<typeof insertJobSchema>;
+export type Job = typeof jobs.$inferSelect;

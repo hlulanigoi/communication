@@ -12,6 +12,7 @@ import {
   type Vehicle, type InsertVehicle,
   type VehicleInspection, type InsertVehicleInspection,
   type InspectionMedia, type InsertInspectionMedia,
+  type Job, type InsertJob,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -129,6 +130,18 @@ export interface IStorage {
   getMediaItem(id: string): Promise<InspectionMedia | undefined>;
   createInspectionMedia(media: InsertInspectionMedia): Promise<InspectionMedia>;
   deleteInspectionMedia(id: string): Promise<boolean>;
+  
+  // Jobs
+  getJobs(): Promise<Job[]>;
+  getJob(id: string): Promise<Job | undefined>;
+  getJobsByStatus(status: string): Promise<Job[]>;
+  getJobsByVehicle(vehicleId: string): Promise<Job[]>;
+  getJobsByClient(clientId: string): Promise<Job[]>;
+  getJobsByAssignee(assignedToId: string): Promise<Job[]>;
+  createJob(job: InsertJob): Promise<Job>;
+  updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
+  deleteJob(id: string): Promise<boolean>;
+  getNextJobNumber(): Promise<string>;
 }
 
 export class MemStorage implements IStorage {
@@ -145,6 +158,7 @@ export class MemStorage implements IStorage {
   private vehicles: Map<string, Vehicle>;
   private vehicleInspections: Map<string, VehicleInspection>;
   private inspectionMedia: Map<string, InspectionMedia>;
+  private jobs: Map<string, Job>;
 
   constructor() {
     this.users = new Map();
@@ -160,6 +174,7 @@ export class MemStorage implements IStorage {
     this.vehicles = new Map();
     this.vehicleInspections = new Map();
     this.inspectionMedia = new Map();
+    this.jobs = new Map();
     
     // Seed some initial data for testing
     this.seedData();
@@ -407,6 +422,163 @@ export class MemStorage implements IStorage {
     sampleVehicles.forEach(vehicle => {
       this.vehicles.set(vehicle.id, vehicle);
     });
+
+    // Seed job data (using staffIds and clientIds already declared above)
+    const vehicleIds = Array.from(this.vehicles.keys());
+    
+    if (staffIds.length > 0 && vehicleIds.length > 0 && clientIds.length > 0) {
+      const sampleJobs: Job[] = [
+        {
+          id: randomUUID(),
+          jobNumber: "J-2024-001",
+          vehicleId: vehicleIds[0],
+          clientId: clientIds[0],
+          assignedToId: staffIds[0],
+          vehicleInfo: JSON.stringify({make: "Audi", model: "RS6 Avant", year: "2023", plate: "GH-928-KL"}),
+          clientName: "Marcus Webb",
+          assignedToName: "Alex Miller",
+          type: "Maintenance",
+          description: "30k Service + Brake Inspection",
+          status: "In Progress",
+          priority: "High",
+          estimatedCost: "850",
+          actualCost: "0",
+          laborHours: "0",
+          notes: "Customer requested full synthetic oil",
+          internalNotes: "Check brake fluid level",
+          partsNeeded: JSON.stringify(["Oil filter", "Air filter", "Brake pads"]),
+          createdDate: new Date("2024-02-14"),
+          scheduledDate: new Date("2024-02-14"),
+          startedDate: new Date("2024-02-14"),
+          completedDate: null,
+          estimatedCompletionDate: new Date("2024-02-15"),
+          inspectionId: null,
+          invoiceId: null,
+          createdBy: "System",
+          updatedAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          jobNumber: "J-2024-002",
+          vehicleId: vehicleIds[1] || vehicleIds[0],
+          clientId: clientIds[1] || clientIds[0],
+          assignedToId: staffIds[1] || staffIds[0],
+          vehicleInfo: JSON.stringify({make: "Land Rover", model: "Defender 110", year: "2024", plate: "LR-442-XM"}),
+          clientName: "TechCorp Fleet",
+          assignedToName: "Sam Knight",
+          type: "Repair",
+          description: "Coolant Leak Diagnostic",
+          status: "Waiting Parts",
+          priority: "Medium",
+          estimatedCost: "450",
+          actualCost: "0",
+          laborHours: "2",
+          notes: "Parts ordered, arriving tomorrow",
+          internalNotes: "Replace radiator hose",
+          partsNeeded: JSON.stringify(["Radiator hose", "Coolant"]),
+          createdDate: new Date("2024-02-13"),
+          scheduledDate: new Date("2024-02-13"),
+          startedDate: new Date("2024-02-13"),
+          completedDate: null,
+          estimatedCompletionDate: new Date("2024-02-16"),
+          inspectionId: null,
+          invoiceId: null,
+          createdBy: "System",
+          updatedAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          jobNumber: "J-2024-003",
+          vehicleId: vehicleIds[2] || vehicleIds[0],
+          clientId: clientIds[2] || clientIds[0],
+          assignedToId: null,
+          vehicleInfo: JSON.stringify({make: "Porsche", model: "911 GT3", year: "2022", plate: "PO-911-RS"}),
+          clientName: "Sarah Jenkins",
+          assignedToName: null,
+          type: "Detailing",
+          description: "Ceramic Coating Refresh",
+          status: "Completed",
+          priority: "Low",
+          estimatedCost: "1200",
+          actualCost: "1200",
+          laborHours: "6",
+          notes: "Ready for pickup - customer notified",
+          internalNotes: "Excellent results, customer will be pleased",
+          partsNeeded: JSON.stringify(["Ceramic coating", "Polish"]),
+          createdDate: new Date("2024-02-12"),
+          scheduledDate: new Date("2024-02-12"),
+          startedDate: new Date("2024-02-12"),
+          completedDate: new Date("2024-02-14"),
+          estimatedCompletionDate: new Date("2024-02-14"),
+          inspectionId: null,
+          invoiceId: null,
+          createdBy: "System",
+          updatedAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          jobNumber: "J-2024-004",
+          vehicleId: vehicleIds[3] || vehicleIds[0],
+          clientId: clientIds[3] || clientIds[0],
+          assignedToId: staffIds[0],
+          vehicleInfo: JSON.stringify({make: "Mercedes", model: "G63 AMG", year: "2021", plate: "MB-630-AG"}),
+          clientName: "Elena Voight",
+          assignedToName: "Alex Miller",
+          type: "Inspection",
+          description: "Pre-purchase Inspection",
+          status: "In Progress",
+          priority: "High",
+          estimatedCost: "350",
+          actualCost: "0",
+          laborHours: "1.5",
+          notes: "Comprehensive inspection for potential buyer",
+          internalNotes: "Check suspension and engine mounts carefully",
+          partsNeeded: null,
+          createdDate: new Date("2024-02-14"),
+          scheduledDate: new Date("2024-02-14"),
+          startedDate: new Date("2024-02-14"),
+          completedDate: null,
+          estimatedCompletionDate: new Date("2024-02-14"),
+          inspectionId: null,
+          invoiceId: null,
+          createdBy: "System",
+          updatedAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          jobNumber: "J-2024-005",
+          vehicleId: vehicleIds[0],
+          clientId: clientIds[0],
+          assignedToId: null,
+          vehicleInfo: JSON.stringify({make: "BMW", model: "M4 Competition", year: "2023", plate: "BM-440-MP"}),
+          clientName: "James Chen",
+          assignedToName: null,
+          type: "Diagnostic",
+          description: "Check Engine Light - Code P0420",
+          status: "Pending",
+          priority: "Medium",
+          estimatedCost: "0",
+          actualCost: "0",
+          laborHours: "0",
+          notes: "Initial diagnostic scheduled",
+          internalNotes: "Likely catalytic converter issue",
+          partsNeeded: null,
+          createdDate: new Date("2024-02-15"),
+          scheduledDate: new Date("2024-02-16"),
+          startedDate: null,
+          completedDate: null,
+          estimatedCompletionDate: new Date("2024-02-16"),
+          inspectionId: null,
+          invoiceId: null,
+          createdBy: "System",
+          updatedAt: new Date(),
+        },
+      ];
+
+      sampleJobs.forEach(job => {
+        this.jobs.set(job.id, job);
+      });
+    }
   }
 
   // User methods
@@ -994,6 +1166,174 @@ export class MemStorage implements IStorage {
 
   async deleteInspectionMedia(id: string): Promise<boolean> {
     return this.inspectionMedia.delete(id);
+  }
+
+  // ============ JOBS METHODS ============
+
+  async getJobs(): Promise<Job[]> {
+    return Array.from(this.jobs.values()).sort((a, b) => {
+      const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+      const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+      return dateB - dateA; // Newest first
+    });
+  }
+
+  async getJob(id: string): Promise<Job | undefined> {
+    return this.jobs.get(id);
+  }
+
+  async getJobsByStatus(status: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.status === status)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByVehicle(vehicleId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.vehicleId === vehicleId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByClient(clientId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.clientId === clientId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByAssignee(assignedToId: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.assignedToId === assignedToId)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getNextJobNumber(): Promise<string> {
+    const currentYear = new Date().getFullYear();
+    const jobs = Array.from(this.jobs.values());
+    const yearJobs = jobs.filter(job => 
+      job.jobNumber.startsWith(`J-${currentYear}`)
+    );
+    
+    let maxNumber = 0;
+    yearJobs.forEach(job => {
+      const match = job.jobNumber.match(/J-\d{4}-(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+    
+    const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
+    return `J-${currentYear}-${nextNumber}`;
+  }
+
+  async createJob(jobData: InsertJob): Promise<Job> {
+    const jobNumber = await this.getNextJobNumber();
+    
+    // Get vehicle info if vehicleId provided
+    let vehicleInfo = null;
+    if (jobData.vehicleId) {
+      const vehicle = await this.getVehicle(jobData.vehicleId);
+      if (vehicle) {
+        vehicleInfo = JSON.stringify({
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          plate: vehicle.licensePlate
+        });
+      }
+    }
+    
+    // Get client name if clientId provided
+    let clientName = null;
+    if (jobData.clientId) {
+      const client = await this.getClient(jobData.clientId);
+      clientName = client?.name || null;
+    }
+    
+    // Get assigned staff name if assignedToId provided
+    let assignedToName = null;
+    if (jobData.assignedToId) {
+      const staffMember = await this.getStaffMember(jobData.assignedToId);
+      assignedToName = staffMember?.name || null;
+    }
+    
+    const newJob: Job = {
+      id: randomUUID(),
+      jobNumber,
+      vehicleInfo,
+      clientName,
+      assignedToName,
+      ...jobData,
+      createdDate: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.jobs.set(newJob.id, newJob);
+    return newJob;
+  }
+
+  async updateJob(id: string, jobData: Partial<InsertJob>): Promise<Job | undefined> {
+    const job = this.jobs.get(id);
+    if (!job) return undefined;
+    
+    // Update denormalized fields if IDs changed
+    let vehicleInfo = job.vehicleInfo;
+    let clientName = job.clientName;
+    let assignedToName = job.assignedToName;
+    
+    if (jobData.vehicleId && jobData.vehicleId !== job.vehicleId) {
+      const vehicle = await this.getVehicle(jobData.vehicleId);
+      if (vehicle) {
+        vehicleInfo = JSON.stringify({
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          plate: vehicle.licensePlate
+        });
+      }
+    }
+    
+    if (jobData.clientId && jobData.clientId !== job.clientId) {
+      const client = await this.getClient(jobData.clientId);
+      clientName = client?.name || null;
+    }
+    
+    if (jobData.assignedToId && jobData.assignedToId !== job.assignedToId) {
+      const staffMember = await this.getStaffMember(jobData.assignedToId);
+      assignedToName = staffMember?.name || null;
+    }
+    
+    const updatedJob: Job = {
+      ...job,
+      ...jobData,
+      vehicleInfo,
+      clientName,
+      assignedToName,
+      updatedAt: new Date(),
+    };
+    
+    this.jobs.set(id, updatedJob);
+    return updatedJob;
+  }
+
+  async deleteJob(id: string): Promise<boolean> {
+    return this.jobs.delete(id);
   }
 }
 
