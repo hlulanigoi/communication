@@ -180,4 +180,14 @@
   .text-glow-red {
     text-shadow: 0 0 10px hsla(var(--primary), 0.4);
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted/20 rounded-full hover:bg-muted/40 transition-colors;
+  }
 }
