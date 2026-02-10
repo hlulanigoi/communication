@@ -114,8 +114,8 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="industrial-border bg-card/50 hover:bg-card transition-all shadow-sm group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card key={i} className="industrial-border bg-card/50 hover-elevate active-elevate-2 transition-all shadow-sm group cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-2">
               <CardTitle className="text-[10px] font-black text-muted-foreground font-display tracking-[0.15em] uppercase">
                 {stat.label}
               </CardTitle>
@@ -187,8 +187,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 border-2 border-border/50 bg-card/30 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/10">
+        <Card className="col-span-3 border-2 border-border/50 bg-card/30 backdrop-blur-sm hover-elevate active-elevate-2 transition-all">
+          <CardHeader className="flex flex-row items-center justify-between gap-1 border-b border-border/50 mb-4 bg-muted/10">
             <CardTitle className="text-sm font-display tracking-widest uppercase italic">Urgent Service Tickets</CardTitle>
             <Button 
               onClick={() => setLocation('/job-board')}
@@ -246,8 +246,8 @@ export default function Dashboard() {
 
       {/* Vehicle Status Row */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2 industrial-border bg-card/40 backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/10">
+        <Card className="md:col-span-2 industrial-border bg-card/40 backdrop-blur-sm hover-elevate transition-all">
+          <CardHeader className="flex flex-row items-center justify-between gap-1 border-b border-border/50 mb-4 bg-muted/10">
             <div>
               <CardTitle className="text-sm font-display tracking-widest uppercase italic">Active Fleet Status</CardTitle>
               <CardDescription className="text-[10px] font-bold uppercase tracking-tight mt-1">Vehicles currently on premises.</CardDescription>

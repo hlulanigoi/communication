@@ -190,6 +190,14 @@
 }
 
 /* Micro-interactions */
+.hover-elevate {
+  @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10;
+}
+
+.active-elevate-2 {
+  @apply transition-all duration-100 active:scale-95 active:shadow-inner;
+}
+
 .hover-lift {
   @apply transition-transform duration-200 hover:-translate-y-1;
 }
