@@ -1,5 +1,4 @@
-import fetch from 'node-fetch';
-
+// Using native Node.js fetch (available in Node 18+)
 const BASE_URL = 'http://localhost:5000/api';
 
 async function testFeatures() {
@@ -157,7 +156,8 @@ async function testFeatures() {
     console.log(`   - Active HR Notifications: ${pinnedNotes.length}`);
 
   } catch (error) {
-    console.error('❌ Error during testing:', error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Error during testing:', errorMessage);
     process.exit(1);
   }
 }

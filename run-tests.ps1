@@ -90,6 +90,7 @@ $newStudent = @{
     status            = "Active"
 }
 $createdStudent = Invoke-Test "POST Create New Student" "POST" "/api/students" $newStudent
+$script:createdStudentRecord = $createdStudent
 
 # Test 7: Create New Client
 $random2 = Get-Random -Minimum 1000 -Maximum 9999
@@ -102,6 +103,7 @@ $newClient = @{
     status      = "Active"
 }
 $createdClient = Invoke-Test "POST Create New Client" "POST" "/api/clients" $newClient
+$script:createdClientRecord = $createdClient
 
 Write-Host "`n[TEST SECTION 3: Business Logic - Advanced Features]" -ForegroundColor Magenta
 
@@ -126,6 +128,7 @@ if ($clients -and $clients.Count -gt 0) {
             totalAmount    = "2500.00"
         }
         $createdInvoice = Invoke-Test "POST Create Invoice with Auto Insurance Split" "POST" "/api/invoices" $invoice
+        $script:createdInvoiceRecord = $createdInvoice
     }
 }
 
@@ -149,6 +152,7 @@ if ($staff -and $staff.Count -gt 0) {
             targetAudience  = "All"
         }
         $createdNote = Invoke-Test "POST Create HR Note (Auto-Pin)" "POST" "/api/hr-notes" $hrNote
+        $script:createdNoteRecord = $createdNote
     }
 }
 
@@ -181,6 +185,14 @@ Invoke-Test "GET All Certificates" "GET" "/api/certificates"
 Write-Host "`n╔═══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "║                    TEST RESULTS SUMMARY                    ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+
+Write-Host "`n[DATA RETRIEVAL SUMMARY]" -ForegroundColor Magenta
+Write-Host "✓ Retrieved $($students.Count) students" -ForegroundColor Gray
+Write-Host "✓ Retrieved $($expenses.Count) operating expenses" -ForegroundColor Gray
+if ($script:createdStudentRecord) { Write-Host "✓ Created student record successfully" -ForegroundColor Gray }
+if ($script:createdClientRecord) { Write-Host "✓ Created client record successfully" -ForegroundColor Gray }
+if ($script:createdInvoiceRecord) { Write-Host "✓ Created invoice record successfully" -ForegroundColor Gray }
+if ($script:createdNoteRecord) { Write-Host "✓ Created HR note record successfully" -ForegroundColor Gray }
 
 Write-Host "`n✅ Tests Passed: $testsPassed" -ForegroundColor Green
 Write-Host "❌ Tests Failed: $testsFailed" -ForegroundColor Red

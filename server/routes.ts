@@ -2077,5 +2077,175 @@ export async function registerRoutes(
     }
   });
 
+  // ============ GLOBAL SEARCH ROUTES ============
+
+  // Global search across all entities
+  app.get("/api/search/global/:query", async (req, res) => {
+    try {
+      const query = decodeURIComponent(req.params.query).toLowerCase();
+      const results: any[] = [];
+
+      // Search students
+      const students = await storage.getStudents();
+      students.forEach(student => {
+        if (
+          student.name.toLowerCase().includes(query) ||
+          student.email?.toLowerCase().includes(query) ||
+          student.department?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: student.id,
+            type: 'student',
+            title: student.name,
+            description: `${student.role} - ${student.email}`,
+            relevance: student.name.toLowerCase().includes(query) ? 1 : 0.8,
+          });
+        }
+      });
+
+      // Search documents
+      const documents = await storage.getDocuments();
+      documents.forEach(doc => {
+        if (
+          doc.title.toLowerCase().includes(query) ||
+          doc.description?.toLowerCase().includes(query) ||
+          doc.studentName?.toLowerCase().includes(query) ||
+          doc.clientName?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: doc.id,
+            type: 'document',
+            title: doc.title,
+            description: `${doc.type} - ${doc.studentName || doc.clientName || 'N/A'}`,
+            relevance: doc.title.toLowerCase().includes(query) ? 1 : 0.8,
+          });
+        }
+      });
+
+      // Search vehicles
+      const vehicles = await storage.getVehicles();
+      vehicles.forEach(vehicle => {
+        if (
+          vehicle.licensePlate?.toLowerCase().includes(query) ||
+          vehicle.vin?.toLowerCase().includes(query) ||
+          vehicle.clientName?.toLowerCase().includes(query) ||
+          vehicle.make?.toLowerCase().includes(query) ||
+          vehicle.model?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: vehicle.id,
+            type: 'vehicle',
+            title: `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`,
+            description: `VIN: ${vehicle.vin} - ${vehicle.clientName}`,
+            relevance: vehicle.licensePlate?.toLowerCase().includes(query) ? 1 : 0.7,
+          });
+        }
+      });
+
+      // Search clients
+      const clients = await storage.getClients();
+      clients.forEach(client => {
+        if (
+          client.name.toLowerCase().includes(query) ||
+          client.email?.toLowerCase().includes(query) ||
+          client.companyName?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: client.id,
+            type: 'client',
+            title: client.name,
+            description: `${client.accountType} - ${client.email}`,
+            relevance: client.name.toLowerCase().includes(query) ? 1 : 0.8,
+          });
+        }
+      });
+
+      // Search jobs
+      const jobs = await storage.getJobs();
+      jobs.forEach(job => {
+        if (
+          job.jobNumber.toLowerCase().includes(query) ||
+          job.description?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: job.id,
+            type: 'job',
+            title: `Job ${job.jobNumber}`,
+            description: job.description || 'No description',
+            relevance: job.jobNumber.toLowerCase().includes(query) ? 1 : 0.8,
+          });
+        }
+      });
+
+      // Sort by relevance
+      results.sort((a, b) => b.relevance - a.relevance);
+
+      res.json(results.slice(0, 20));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Autocomplete suggestions
+  app.get("/api/search/autocomplete/:query", async (req, res) => {
+    try {
+      const query = decodeURIComponent(req.params.query).toLowerCase();
+      const results: any[] = [];
+
+      // Autocomplete from documents (most frequently searched)
+      const documents = await storage.getDocuments();
+      documents.forEach(doc => {
+        if (doc.title.toLowerCase().includes(query)) {
+          results.push({
+            id: doc.id,
+            type: 'document',
+            title: doc.title,
+            description: `Document - ${doc.type}`,
+            relevance: 1,
+          });
+        }
+      });
+
+      // Autocomplete from vehicles
+      const vehicles = await storage.getVehicles();
+      vehicles.forEach(vehicle => {
+        if (
+          vehicle.licensePlate?.toLowerCase().includes(query) ||
+          vehicle.vin?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: vehicle.id,
+            type: 'vehicle',
+            title: `${vehicle.licensePlate || vehicle.vin}`,
+            description: `${vehicle.make} ${vehicle.model}`,
+            relevance: vehicle.licensePlate?.toLowerCase().includes(query) ? 1 : 0.9,
+          });
+        }
+      });
+
+      // Autocomplete from clients
+      const clients = await storage.getClients();
+      clients.forEach(client => {
+        if (client.name.toLowerCase().startsWith(query) || client.name.toLowerCase().includes(query)) {
+          results.push({
+            id: client.id,
+            type: 'client',
+            title: client.name,
+            description: client.accountType,
+            relevance: client.name.toLowerCase().startsWith(query) ? 1 : 0.8,
+          });
+        }
+      });
+
+      // Sort by relevance and limit
+      results.sort((a, b) => b.relevance - a.relevance);
+
+      res.json(results.slice(0, 8));
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
+
 }

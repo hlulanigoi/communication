@@ -725,3 +725,81 @@ export async function deleteInspectionMedia(id: string): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete inspection media');
 }
+// ============ GLOBAL SEARCH API ============
+
+export interface GlobalSearchResult {
+  id: string;
+  type: 'document' | 'vehicle' | 'client' | 'job' | 'inventory' | 'invoice' | 'staff';
+  title: string;
+  description?: string;
+  metadata?: Record<string, any>;
+  relevance: number;
+}
+
+export async function globalSearch(query: string): Promise<GlobalSearchResult[]> {
+  const res = await fetch(`${API_BASE}/search/global/${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error('Failed to perform global search');
+  return res.json();
+}
+
+export async function autocompleteSearch(query: string): Promise<GlobalSearchResult[]> {
+  const res = await fetch(`${API_BASE}/search/autocomplete/${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error('Failed to get search suggestions');
+  return res.json();
+}
+
+// Search History Management (Client-side localStorage)
+const SEARCH_HISTORY_KEY = 'justfix_search_history';
+const MAX_SEARCH_HISTORY = 10;
+
+export interface SearchHistoryItem {
+  query: string;
+  timestamp: number;
+  resultCount?: number;
+}
+
+export function getSearchHistory(): SearchHistoryItem[] {
+  try {
+    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addToSearchHistory(query: string, resultCount?: number): void {
+  try {
+    if (!query.trim()) return;
+    
+    const history = getSearchHistory();
+    // Remove duplicate if exists
+    const filtered = history.filter(item => item.query.toLowerCase() !== query.toLowerCase());
+    
+    // Add new item at beginning
+    const newHistory = [
+      { query, timestamp: Date.now(), resultCount },
+      ...filtered
+    ].slice(0, MAX_SEARCH_HISTORY);
+    
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
+  } catch {
+    console.error('Failed to save search history');
+  }
+}
+
+export function clearSearchHistory(): void {
+  try {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+  } catch {
+    console.error('Failed to clear search history');
+  }
+}
+
+export function removeFromSearchHistory(query: string): void {
+  try {
+    const history = getSearchHistory().filter(item => item.query !== query);
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    console.error('Failed to remove from search history');
+  }
+}

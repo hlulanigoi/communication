@@ -280,10 +280,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
              {[
-               { label: "Scan VIN / Plate", action: () => setLocation("/vehicle-list") },
+               { label: "Scan VIN / Plate", action: () => setLocation("/vehicles") },
                { label: "Create Invoice", action: () => setLocation("/billing") },
                { label: "Lookup Part", action: () => setLocation("/inventory") },
-               { label: "Schedule Appointment", action: () => setLocation("/job-board") }
+               { label: "Schedule Appointment", action: () => setLocation("/jobs") }
              ].map(({ label, action }, i) => (
                <Button 
                  key={i} 

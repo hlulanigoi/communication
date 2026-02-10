@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import GlobalSearchBar from "@/components/GlobalSearchBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -118,13 +119,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4 relative">
-            <div className="relative hidden sm:block w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                type="search" 
-                placeholder="Search VIN, Client, Job ID..." 
-                className="pl-9 h-9 bg-secondary/50 border-transparent focus:border-primary/50 focus:bg-background transition-all font-mono text-sm"
-              />
+            <div className="hidden sm:flex flex-1">
+              <GlobalSearchBar />
             </div>
             
             <Button 
