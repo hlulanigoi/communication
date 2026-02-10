@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation as useWouterLocation } from 'wouter';
 import Layout from '@/components/Layout';
+import Vehicle3DViewer from '@/components/Vehicle3DViewer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -469,9 +470,31 @@ export default function MobileJobCreator() {
 
             {/* Details Tab */}
             <TabsContent value="details" className="space-y-4">
+              {/* 3D Vehicle Viewer */}
+              {jobData.vehicleId && (
+                <Vehicle3DViewer
+                  vehicle={vehicles.find((v) => v.id === jobData.vehicleId)}
+                  modelColor={vehicles.find((v) => v.id === jobData.vehicleId)?.color || '#E2231A'}
+                  height="h-80"
+                  showControls={true}
+                />
+              )}
+
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Job Information</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {jobData.vehicleId ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        Vehicle Selected
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        Select Vehicle
+                      </>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -484,6 +507,9 @@ export default function MobileJobCreator() {
                         <p className="text-xs text-muted-foreground">
                           {vehicles.find((v) => v.id === jobData.vehicleId)?.make}{' '}
                           {vehicles.find((v) => v.id === jobData.vehicleId)?.model}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          VIN: {vehicles.find((v) => v.id === jobData.vehicleId)?.vin?.substring(0, 15)}...
                         </p>
                       </div>
                     ) : extractedData.registrationNumber || extractedData.vehicleMake ? (
