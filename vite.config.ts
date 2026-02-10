@@ -42,7 +42,14 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
+    port: 5000,
+    strictPort: false,
     allowedHosts: true,
+    hmr: {
+      host: "192.168.8.101",
+      port: 5000,
+      protocol: "http",
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
