@@ -13,6 +13,7 @@ import Billing from "@/pages/Billing";
 import Communication from "@/pages/Communication";
 import Analytics from "@/pages/Analytics";
 import Search from "@/pages/Search";
+import FieldTechPWA from "@/pages/FieldTechPWA";
 import MobileJobCreator from "@/pages/MobileJobCreator";
 import DocumentCapture from "@/pages/DocumentCapture";
 import Academy from "@/pages/Academy";
@@ -24,6 +25,7 @@ import DocumentCenter from "@/pages/DocumentCenter";
 function Router() {
   return (
     <Switch>
+      <Route path="/field" component={FieldTechPWA} />
       <Route path="/" component={Dashboard} />
       <Route path="/search" component={Search} />
       <Route path="/mobile-job-creator" component={MobileJobCreator} />

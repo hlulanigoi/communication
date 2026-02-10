@@ -1,8 +1,8 @@
 {
-  "name": "JustFix Auto Electrix - Field Service",
-  "short_name": "JustFix Field",
-  "description": "Mobile field service app for job creation and vehicle inspection with PWA capabilities",
-  "start_url": "/mobile-job-creator",
+  "name": "FieldTech - Job & Document Manager",
+  "short_name": "FieldTech",
+  "description": "Offline-capable PWA for field technicians: create jobs with photos, voice, and vehicle OCR; digitize documents with automatic data extraction",
+  "start_url": "/field",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -39,8 +39,8 @@
     {
       "name": "Create Job",
       "short_name": "New Job",
-      "description": "Quickly create a new job card",
-      "url": "/mobile-job-creator?action=new",
+      "description": "Create job with photos and vehicle detection",
+      "url": "/field?tab=jobs",
       "icons": [
         {
           "src": "/favicon.png",
@@ -49,10 +49,10 @@
       ]
     },
     {
-      "name": "Scan Vehicle",
-      "short_name": "Scan",
-      "description": "Scan vehicle details",
-      "url": "/mobile-job-creator?action=scan",
+      "name": "Capture Document",
+      "short_name": "Document",
+      "description": "Digitize invoices and receipts",
+      "url": "/field?tab=documents",
       "icons": [
         {
           "src": "/favicon.png",
@@ -62,7 +62,7 @@
     }
   ],
   "share_target": {
-    "action": "/mobile-job-creator",
+    "action": "/field",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
