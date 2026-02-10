@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle, User, Info } from "lucide-react";
+import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle, User, Info, Search } from "lucide-react";
 import type { Student, Staff, JobInvoice } from "@shared/schema";
 import { cn } from "@/lib/utils";
 

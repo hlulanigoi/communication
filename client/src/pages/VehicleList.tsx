@@ -350,7 +350,12 @@ export default function VehicleList() {
                 </TableRow>
               ) : (
                 filteredVehicles.map((vehicle) => (
-                  <TableRow key={vehicle.id} className="group" data-testid={`vehicle-row-${vehicle.id}`}>
+                  <TableRow 
+                    key={vehicle.id} 
+                    className="group hover:bg-muted/30 transition-colors cursor-pointer" 
+                    data-testid={`vehicle-row-${vehicle.id}`}
+                    onClick={() => openEditDialog(vehicle)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <span className="text-base font-semibold text-foreground">

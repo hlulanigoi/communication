@@ -439,7 +439,7 @@ export default function JobBoard() {
                     {filteredJobs.filter(j => j.status === col.id).map(job => (
                       <Card
                         key={job.id}
-                        className="cursor-pointer hover:border-primary/50 transition-colors shadow-sm bg-card"
+                        className="cursor-pointer hover-elevate active-elevate-2 transition-all shadow-sm bg-card hover:border-primary/50"
                         onClick={() => setSelectedJob(job)}
                         data-testid={`job-card-${job.jobNumber}`}
                       >
