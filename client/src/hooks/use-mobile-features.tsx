@@ -1,6 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
+// Type declarations for Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export interface CameraOptions {
   facingMode?: 'user' | 'environment';
   maxWidth?: number;
@@ -234,13 +242,13 @@ export function useLocation() {
 }
 
 export function useVoiceCommands(onCommand?: (command: string) => void) {
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
       console.warn('Speech Recognition not supported');
@@ -259,7 +267,7 @@ export function useVoiceCommands(onCommand?: (command: string) => void) {
       setError(null);
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
@@ -274,7 +282,7 @@ export function useVoiceCommands(onCommand?: (command: string) => void) {
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       const errorMsg = `Speech error: ${event.error}`;
       setError(errorMsg);
       toast.error(errorMsg);

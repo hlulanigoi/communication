@@ -613,6 +613,18 @@ export async function getVehiclesByClient(clientId: string): Promise<Vehicle[]> 
   return res.json();
 }
 
+export async function searchVehicleByRegistration(plate: string): Promise<Vehicle[]> {
+  const res = await fetch(`${API_BASE}/vehicles/by-registration/${encodeURIComponent(plate)}`);
+  if (!res.ok) return []; // Return empty if not found
+  return res.json();
+}
+
+export async function searchVehicleByVin(vin: string): Promise<Vehicle[]> {
+  const res = await fetch(`${API_BASE}/vehicles/by-vin/${encodeURIComponent(vin)}`);
+  if (!res.ok) return []; // Return empty if not found
+  return res.json();
+}
+
 export async function createVehicle(vehicle: Partial<Vehicle>): Promise<Vehicle> {
   const res = await fetch(`${API_BASE}/vehicles`, {
     method: 'POST',

@@ -22,9 +22,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import { useCamera, useVoiceRecorder, useLocation, useVoiceCommands } from '@/hooks/use-mobile-features';
-import { getVehicles, createJob, getClients } from '@/lib/api';
+import { useOcr } from '@/hooks/use-ocr';
+import { getVehicles, createJob, getClients, searchVehicleByRegistration, searchVehicleByVin } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function MobileJobCreator() {
@@ -65,6 +67,24 @@ export default function MobileJobCreator() {
     }
   });
 
+  // OCR for reading vehicle data from photos
+  const { processImage: ocrProcessImage, isProcessing: isOcrProcessing, extractedData } = useOcr({
+    useCloudApi: false, // Start with offline OCR, can be toggled to true if API key available
+    autoExtract: true,
+  });
+
+  // Auto-process photos when captured
+  useEffect(() => {
+    if (camera.photos.length > 0) {
+      const lastPhoto = camera.photos[camera.photos.length - 1];
+      // Convert data URL to blob for OCR
+      fetch(lastPhoto)
+        .then((res) => res.blob())
+        .then((blob) => ocrProcessImage(blob))
+        .catch((err) => console.warn('OCR auto-process failed:', err));
+    }
+  }, [camera.photos.length]);
+
   // Queries
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
@@ -76,20 +96,69 @@ export default function MobileJobCreator() {
     queryFn: getClients,
   });
 
-  // Auto-detect vehicle from photos (mock OCR)
+  // Auto-detect vehicle from photos using OCR
   const detectVehicleFromPhotos = async () => {
     if (camera.photos.length === 0) {
       toast.error('Please capture at least one photo');
       return;
     }
 
-    // Mock vehicle detection - in production, this would use actual OCR/ML
-    const detectedVehicle = vehicles[Math.floor(Math.random() * vehicles.length)];
-    if (detectedVehicle) {
-      setJobData((prev) => ({ ...prev, vehicleId: detectedVehicle.id }));
-      toast.success(`Detected: ${detectedVehicle.make} ${detectedVehicle.model}`);
+    // Try to find a vehicle matching extracted data
+    if (extractedData.registrationNumber) {
+      // Search by registration/license plate via API
+      try {
+        const found = await searchVehicleByRegistration(extractedData.registrationNumber);
+        if (found.length > 0) {
+          setJobData((prev) => ({ ...prev, vehicleId: found[0].id }));
+          toast.success(`✓ Found: ${found[0].make} ${found[0].model}`, {
+            description: `Registration: ${extractedData.registrationNumber}`,
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('Vehicle lookup failed:', err);
+      }
+    }
+
+    if (extractedData.vinNumber) {
+      // Search by VIN via API
+      try {
+        const found = await searchVehicleByVin(extractedData.vinNumber);
+        if (found.length > 0) {
+          setJobData((prev) => ({ ...prev, vehicleId: found[0].id }));
+          toast.success(`✓ Found: ${found[0].make} ${found[0].model}`, {
+            description: `VIN: ${extractedData.vinNumber}`,
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn('Vehicle lookup failed:', err);
+      }
+    }
+
+    if (extractedData.vehicleMake) {
+      // Search by make and model in local cache
+      const foundVehicle = vehicles.find(
+        (v) =>
+          v.make?.toUpperCase().includes(extractedData.vehicleMake!) ||
+          v.model?.toUpperCase().includes(extractedData.vehicleModel || '')
+      );
+      if (foundVehicle) {
+        setJobData((prev) => ({ ...prev, vehicleId: foundVehicle.id }));
+        toast.success(`✓ Found: ${foundVehicle.make} ${foundVehicle.model}`);
+        return;
+      }
+    }
+
+    // Fallback: show extracted data and ask user to select manually
+    if (Object.values(extractedData).some((v) => v)) {
+      toast.info('Vehicle not in system', {
+        description: 'Registration or VIN not found. Please select manually.',
+      });
     } else {
-      toast.error('No vehicles found in system');
+      toast.error('No vehicle data extracted', {
+        description: 'Could not read registration or VIN from photos',
+      });
     }
   };
 
@@ -181,6 +250,33 @@ export default function MobileJobCreator() {
                   </Badge>
                 </div>
               )}
+
+              {(extractedData.registrationNumber || extractedData.vinNumber || extractedData.vehicleMake) && (
+                <div className="flex items-start justify-between text-sm pt-2 border-t border-border">
+                  <span className="flex items-center gap-2 text-blue-600">
+                    <Eye className="w-4 h-4" />
+                    OCR Detected
+                  </span>
+                  <div className="text-right text-xs space-y-1">
+                    {extractedData.registrationNumber && <div className="text-blue-600">{extractedData.registrationNumber}</div>}
+                    {extractedData.vehicleMake && (
+                      <div className="text-muted-foreground">
+                        {extractedData.vehicleMake} {extractedData.vehicleModel || ''}
+                      </div>
+                    )}
+                    {extractedData.vinNumber && <div className="text-muted-foreground text-xs">{extractedData.vinNumber.substring(0, 8)}...</div>}
+                  </div>
+                </div>
+              )}
+
+              {isOcrProcessing && (
+                <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
+                  <span className="flex items-center gap-2 text-amber-600">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Reading photo...
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -266,9 +362,18 @@ export default function MobileJobCreator() {
                         </div>
                       ))}
                     </div>
-                    <Button onClick={detectVehicleFromPhotos} className="w-full mt-4 gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Detect Vehicle from Photos
+                    <Button onClick={detectVehicleFromPhotos} className="w-full mt-4 gap-2" disabled={isOcrProcessing}>
+                      {isOcrProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Reading photos...
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4" />
+                          {jobData.vehicleId ? 'Update Vehicle' : 'Detect Vehicle from Photos'}
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -381,6 +486,39 @@ export default function MobileJobCreator() {
                           {vehicles.find((v) => v.id === jobData.vehicleId)?.model}
                         </p>
                       </div>
+                    ) : extractedData.registrationNumber || extractedData.vehicleMake ? (
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg space-y-2">
+                        <p className="text-xs text-blue-600 font-medium">Extracted from photo:</p>
+                        {extractedData.registrationNumber && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Plate: </span>
+                            <span className="font-medium">{extractedData.registrationNumber}</span>
+                          </div>
+                        )}
+                        {extractedData.vehicleMake && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Make/Model: </span>
+                            <span className="font-medium">
+                              {extractedData.vehicleMake} {extractedData.vehicleModel || ''}
+                            </span>
+                          </div>
+                        )}
+                        {extractedData.vinNumber && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">VIN: </span>
+                            <span className="font-mono text-xs">{extractedData.vinNumber.substring(0, 12)}...</span>
+                          </div>
+                        )}
+                        <Button
+                          onClick={detectVehicleFromPhotos}
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-2"
+                          disabled={isOcrProcessing}
+                        >
+                          {isOcrProcessing ? 'Searching...' : 'Find in System'}
+                        </Button>
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Not detected yet</p>
                     )}
@@ -415,7 +553,7 @@ export default function MobileJobCreator() {
                       value={jobData.description}
                       onChange={(e) => setJobData((prev) => ({ ...prev, description: e.target.value }))}
                       placeholder="What work needs to be done?"
-                      minRows={3}
+                      className="min-h-24"
                     />
                   </div>
 

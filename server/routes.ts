@@ -1040,6 +1040,32 @@ export async function registerRoutes(
     }
   });
 
+  // Vehicle lookup by registration/license plate (for OCR data)
+  app.get("/api/vehicles/by-registration/:plate", async (req, res) => {
+    try {
+      const vehicles = await storage.getVehicles();
+      const found = vehicles.filter((v) =>
+        v.licensePlate?.toUpperCase().includes(req.params.plate.toUpperCase())
+      );
+      res.json(found);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Vehicle lookup by VIN (for OCR data)
+  app.get("/api/vehicles/by-vin/:vin", async (req, res) => {
+    try {
+      const vehicles = await storage.getVehicles();
+      const found = vehicles.filter((v) =>
+        v.vin?.toUpperCase().startsWith(req.params.vin.toUpperCase().substring(0, 8))
+      );
+      res.json(found);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/vehicles", async (req, res) => {
     try {
       const vehicle = await storage.createVehicle(req.body);
