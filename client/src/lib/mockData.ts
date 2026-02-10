@@ -1,4 +1,4 @@
-import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, MessageSquare, Shield, BarChart3, Search, Bell, LogOut, LayoutDashboard, Plus, CreditCard, GraduationCap, Briefcase, UserRound, ClipboardList, Receipt } from "lucide-react";
+import { Wrench, Users, Car, FileText, Calendar, Box, Activity, Settings, MessageSquare, Shield, BarChart3, Search, Bell, LogOut, LayoutDashboard, Plus, CreditCard, GraduationCap, Briefcase, UserRound, ClipboardList, Receipt, Smartphone } from "lucide-react";
 
 export const mockStaff = [
   { id: "S-001", name: "Alex Miller", role: "Senior Technician", type: "Staff", status: "Active" },
@@ -69,6 +69,7 @@ export const navItems = [
   { icon: GraduationCap, label: "Academy", href: "/academy" },
   { icon: Users, label: "People", href: "/people" },
   { icon: Wrench, label: "Jobs", href: "/jobs" },
+  { icon: Smartphone, label: "Mobile Job Creator", href: "/mobile-job-creator" },
   { icon: Car, label: "Vehicles", href: "/vehicles" },
   { icon: CreditCard, label: "Billing", href: "/billing" },
   { icon: Receipt, label: "Admin Bills", href: "/admin-bills" },

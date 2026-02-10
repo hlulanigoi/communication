@@ -13,6 +13,7 @@ import Billing from "@/pages/Billing";
 import Communication from "@/pages/Communication";
 import Analytics from "@/pages/Analytics";
 import Search from "@/pages/Search";
+import MobileJobCreator from "@/pages/MobileJobCreator";
 import Academy from "@/pages/Academy";
 import AdminBills from "@/pages/AdminBills";
 
@@ -24,6 +25,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/search" component={Search} />
+      <Route path="/mobile-job-creator" component={MobileJobCreator} />
       <Route path="/vehicles" component={VehicleList} />
       <Route path="/jobs" component={JobBoard} />
       <Route path="/inventory" component={Inventory} />

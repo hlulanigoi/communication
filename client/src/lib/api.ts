@@ -10,7 +10,8 @@ import type {
   Certificate,
   Vehicle,
   VehicleInspection,
-  InspectionMedia
+  InspectionMedia,
+  Job
 } from '@shared/schema';
 
 const API_BASE = '/api';
@@ -725,6 +726,60 @@ export async function deleteInspectionMedia(id: string): Promise<void> {
   });
   if (!res.ok) throw new Error('Failed to delete inspection media');
 }
+
+// ============ JOBS API ============
+
+export async function getJobs(): Promise<Job[]> {
+  const res = await fetch(`${API_BASE}/jobs`);
+  if (!res.ok) throw new Error('Failed to fetch jobs');
+  return res.json();
+}
+
+export async function getJob(id: string): Promise<Job> {
+  const res = await fetch(`${API_BASE}/jobs/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch job');
+  return res.json();
+}
+
+export async function getJobsByVehicle(vehicleId: string): Promise<Job[]> {
+  const res = await fetch(`${API_BASE}/jobs/by-vehicle/${vehicleId}`);
+  if (!res.ok) throw new Error('Failed to fetch vehicle jobs');
+  return res.json();
+}
+
+export async function getJobsByStatus(status: string): Promise<Job[]> {
+  const res = await fetch(`${API_BASE}/jobs/by-status/${status}`);
+  if (!res.ok) throw new Error('Failed to fetch jobs by status');
+  return res.json();
+}
+
+export async function createJob(job: Partial<Job>): Promise<Job> {
+  const res = await fetch(`${API_BASE}/jobs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(job),
+  });
+  if (!res.ok) throw new Error('Failed to create job');
+  return res.json();
+}
+
+export async function updateJob(id: string, job: Partial<Job>): Promise<Job> {
+  const res = await fetch(`${API_BASE}/jobs/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(job),
+  });
+  if (!res.ok) throw new Error('Failed to update job');
+  return res.json();
+}
+
+export async function deleteJob(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/jobs/${id}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete job');
+}
+
 // ============ GLOBAL SEARCH API ============
 
 export interface GlobalSearchResult {

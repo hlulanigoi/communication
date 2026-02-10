@@ -1,0 +1,80 @@
+{
+  "name": "JustFix Auto Electrix - Field Service",
+  "short_name": "JustFix Field",
+  "description": "Mobile field service app for job creation and vehicle inspection with PWA capabilities",
+  "start_url": "/mobile-job-creator",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#E2231A",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity"],
+  "screenshots": [
+    {
+      "src": "/favicon.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "1080x1440",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Job",
+      "short_name": "New Job",
+      "description": "Quickly create a new job card",
+      "url": "/mobile-job-creator?action=new",
+      "icons": [
+        {
+          "src": "/favicon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Scan Vehicle",
+      "short_name": "Scan",
+      "description": "Scan vehicle details",
+      "url": "/mobile-job-creator?action=scan",
+      "icons": [
+        {
+          "src": "/favicon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/mobile-job-creator",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["image/*", "video/*"]
+        }
+      ]
+    }
+  }
+}
