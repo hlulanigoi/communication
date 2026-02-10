@@ -2,7 +2,7 @@
  * Three.js Vehicle Model Generator
  * Creates procedural 3D car models based on vehicle data
  */
-
+// @ts-ignore - three.js types are installed but may have resolution issues
 import * as THREE from 'three';
 
 export interface VehicleModelConfig {
@@ -188,7 +188,7 @@ export function createScene(): {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   // Lighting
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);

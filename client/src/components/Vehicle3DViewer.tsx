@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+// @ts-ignore - three.js types are installed but may have resolution issues
 import * as THREE from 'three';
 import { createVehicleModel, VehicleModelConfig } from '@/lib/three-vehicle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,24 +9,25 @@ import { RotateCcw, Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
 
 export interface Vehicle3DViewerProps {
   vehicle?: {
+    [key: string]: any;
     make?: string;
     model?: string;
     year?: string | number;
-    color?: string;
-    vin?: string;
-    [key: string]: any;
+    color?: string | null;
+    vin?: string | null;
   };
-  modelColor?: string;
+  modelColor?: string | null;
   showControls?: boolean;
   height?: string;
 }
 
 export default function Vehicle3DViewer({
   vehicle,
-  modelColor = '#E2231A',
+  modelColor,
   showControls = true,
   height = 'h-96',
 }: Vehicle3DViewerProps) {
+  const finalModelColor = modelColor || vehicle?.color || '#E2231A';
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -58,8 +60,8 @@ export default function Vehicle3DViewer({
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-    renderer.dpr = window.devicePixelRatio;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.setPixelRatio(window.devicePixelRatio);
 
     containerRef.current.appendChild(renderer.domElement);
 
@@ -96,7 +98,7 @@ export default function Vehicle3DViewer({
 
     // Create vehicle model
     const vehicleGroup = createVehicleModel({
-      color: modelColor,
+      color: finalModelColor,
       scale: 1,
       wireframe: false,
     });
@@ -189,7 +191,7 @@ export default function Vehicle3DViewer({
       renderer.domElement.removeEventListener('wheel', onWheel);
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelColor]);
+  }, [finalModelColor]);
 
   const handleReset = () => {
     controlsRef.current?.reset();

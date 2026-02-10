@@ -474,9 +474,8 @@ export default function MobileJobCreator() {
               {jobData.vehicleId && (
                 <Vehicle3DViewer
                   vehicle={vehicles.find((v) => v.id === jobData.vehicleId)}
-                  modelColor={vehicles.find((v) => v.id === jobData.vehicleId)?.color || '#E2231A'}
-                  height="h-80"
                   showControls={true}
+                  height="h-80"
                 />
               )}
 
