@@ -8,8 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GlobalSearchBar from "@/components/GlobalSearchBar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileLayout from "@/components/MobileLayout";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+
+  // Render mobile layout on mobile devices
+  if (isMobile) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
+
+  // Desktop layout continues below
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
