@@ -13,13 +13,6 @@ import MobileLayout from "@/components/MobileLayout";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
-
-  // Render mobile layout on mobile devices
-  if (isMobile) {
-    return <MobileLayout>{children}</MobileLayout>;
-  }
-
-  // Desktop layout continues below
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -28,6 +21,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
     return 'light';
   });
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'success', title: 'Invoice Created', message: 'Invoice INV-2024-001 has been created successfully.', timestamp: '2 mins ago' },
+    { id: 2, type: 'alert', title: 'Low Stock Alert', message: 'Brake Pads inventory is below minimum threshold.', timestamp: '15 mins ago' },
+    { id: 3, type: 'info', title: 'Job Assigned', message: 'New job JB-2024-156 has been assigned to you.', timestamp: '1 hour ago' },
+  ]);
+
+  // Render mobile layout on mobile devices
+  if (isMobile) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
+
+  // Desktop layout continues below
 
   useEffect(() => {
     const root = window.document.documentElement;
