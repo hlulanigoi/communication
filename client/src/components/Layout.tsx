@@ -28,13 +28,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { id: 3, type: 'info', title: 'Job Assigned', message: 'New job JB-2024-156 has been assigned to you.', timestamp: '1 hour ago' },
   ]);
 
-  // Render mobile layout on mobile devices
-  if (isMobile) {
-    return <MobileLayout>{children}</MobileLayout>;
-  }
-
-  // Desktop layout continues below
-
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -45,6 +38,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     root.classList.add(theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Render mobile layout on mobile devices
+  if (isMobile) {
+    return <MobileLayout>{children}</MobileLayout>;
+  }
+
+  // Desktop layout
 
   return (
     <div className="min-h-screen bg-background text-foreground flex overflow-hidden font-sans selection:bg-primary/20">
