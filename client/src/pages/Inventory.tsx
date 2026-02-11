@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Plus, AlertCircle, Package, X, Edit, Trash2, TrendingUp, TrendingDown, ArrowUpDown, Eye, History, ShoppingCart } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import { formatCurrency } from "@/lib/utils";
 import { 
   getInventoryItems,
   getLowStockItems,
@@ -249,7 +250,7 @@ export default function Inventory() {
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase">Inventory Value</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-display">${totalValue.toFixed(2)}</div>
+              <div className="text-2xl font-bold font-display">{formatCurrency(totalValue)}</div>
               <p className="text-xs text-muted-foreground mt-1">Total cost value</p>
             </CardContent>
           </Card>
@@ -403,7 +404,7 @@ export default function Inventory() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        ${parseFloat(item.unitPrice).toFixed(2)}
+                        {formatCurrency(parseFloat(item.unitPrice))}
                       </TableCell>
                       <TableCell className="text-right">
                         {isOutOfStock ? (

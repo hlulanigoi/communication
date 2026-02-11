@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { queryClient } from "./lib/queryClient";
+import { initRealtimeClient } from "./lib/realtime";
+
+initRealtimeClient(queryClient);
 
 createRoot(document.getElementById("root")!).render(<App />);
 // Register Service Worker for PWA support

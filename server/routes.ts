@@ -1306,6 +1306,13 @@ export async function registerRoutes(
   app.post("/api/jobs", async (req, res) => {
     try {
       const job = await storage.createJob(req.body);
+      try {
+        // notify realtime clients
+        const { broadcast } = await import("./realtime");
+        broadcast("job.created", job);
+      } catch (e) {
+        console.warn("Realtime broadcast failed:", e);
+      }
       res.status(201).json(job);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -1317,6 +1324,12 @@ export async function registerRoutes(
       const job = await storage.updateJob(req.params.id, req.body);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
+      }
+      try {
+        const { broadcast } = await import("./realtime");
+        broadcast("job.updated", job);
+      } catch (e) {
+        console.warn("Realtime broadcast failed:", e);
       }
       res.json(job);
     } catch (error: any) {

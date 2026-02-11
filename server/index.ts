@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
+import os from "os";
 import { registerRoutes } from "./routes";
+import { initRealtime } from "./realtime";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
@@ -60,6 +62,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await initRealtime(httpServer);
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -86,11 +89,24 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // Default to 5000 if not specified. Bind host can be configured via HOST env.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(port, "localhost", () => {
-    log(`serving on http://localhost:${port}`);
+  const host = process.env.HOST || "0.0.0.0";
+
+  httpServer.listen(port, host, () => {
+    const displayHost = host === "0.0.0.0" ? "localhost" : host;
+    log(`serving on http://${displayHost}:${port}`);
+
+    // If bound to 0.0.0.0, also log a LAN-accessible IP for convenience
+    if (host === "0.0.0.0") {
+      const nets = os.networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name] || []) {
+          if (net.family === "IPv4" && !net.internal) {
+            log(`also accessible on http://${net.address}:${port}`);
+          }
+        }
+      }
+    }
   });
 })();

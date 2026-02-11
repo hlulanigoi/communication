@@ -3,8 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, Clock, Search, X, Plus, User, Car as CarIcon, AlertCircle, DollarSign, Wrench } from "lucide-react";
+import { Calendar, Clock, Search, X, Plus, User, Car as CarIcon, AlertCircle, DollarSign, Wrench, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ const priorityColors = {
 export default function JobBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(true);
   const [isNewJobOpen, setIsNewJobOpen] = useState(false);
   const [newJobData, setNewJobData] = useState({
     vehicleId: "",
@@ -235,6 +237,9 @@ export default function JobBoard() {
           <p className="text-sm text-muted-foreground">Kanban view of current service workflow.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setIsDrawerVisible((v) => !v)} title={isDrawerVisible ? 'Hide details' : 'Show details'}>
+            {isDrawerVisible ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </Button>
           <div className="flex -space-x-2 mr-4">
             {staff.slice(0, 3).map((s, i) => (
               <Avatar key={s.id} className="w-8 h-8 border-2 border-background">
@@ -490,7 +495,9 @@ export default function JobBoard() {
       )}
 
       {/* Job Details Drawer */}
-      <Drawer open={!!selectedJob} onOpenChange={(open) => !open && setSelectedJob(null)}>
+      <Drawer open={isDrawerVisible && !!selectedJob} onOpenChange={(open) => {
+        if (!open) setSelectedJob(null);
+      }}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle className="flex items-center justify-between">
@@ -529,7 +536,7 @@ export default function JobBoard() {
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
                     <span className="font-semibold">Estimated:</span>
-                    <span>${selectedJob.estimatedCost}</span>
+                    <span>{formatCurrency(selectedJob.estimatedCost)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-muted-foreground" />

@@ -7,6 +7,7 @@ import { AlertCircle, CreditCard, Download, ExternalLink, Filter, TrendingUp, Se
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
 import { getInvoices } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 import type { JobInvoice } from "@shared/schema";
 
 export default function Billing() {
@@ -81,7 +82,7 @@ export default function Billing() {
                 <div className="h-8 bg-muted animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold font-display">${totalOutstanding.toFixed(2)}</div>
+                  <div className="text-2xl font-bold font-display">{formatCurrency(totalOutstanding)}</div>
                   <p className="text-xs text-muted-foreground mt-1">Across {invoices.filter(i => i.status !== 'Paid').length} unpaid invoices</p>
                 </>
               )}
@@ -96,7 +97,7 @@ export default function Billing() {
                 <div className="h-8 bg-muted animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="text-2xl font-bold font-display text-emerald-500">${totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold font-display text-emerald-500">{formatCurrency(totalRevenue)}</div>
                   <p className="text-xs text-muted-foreground mt-1">{invoices.length} invoices total</p>
                 </>
               )}
@@ -190,7 +191,7 @@ export default function Billing() {
                     <TableCell className="font-medium">{inv.studentId ? `Student ${inv.studentId.slice(0, 8)}` : 'N/A'}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{new Date(inv.dateIssued).toLocaleDateString()}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{new Date(inv.dueDate).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-mono">${(inv.amount || 0).toFixed(2)}</TableCell>
+                    <TableCell className="font-mono">{formatCurrency(inv.amount)}</TableCell>
                     <TableCell>
                       <Badge 
                         variant="secondary"

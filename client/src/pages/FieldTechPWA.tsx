@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Camera, FileText, MapPin, Battery, Wifi, Signal, ChevronRight } from 'lucide-react';
 import MobileJobCreator from './MobileJobCreator';
 import DocumentCapture from './DocumentCapture';
+import MobileScreen from '@/components/MobileScreen';
 
 export default function FieldTechPWA() {
   const [activeTab, setActiveTab] = useState<'home' | 'jobs' | 'documents'>('home');
@@ -139,11 +140,21 @@ export default function FieldTechPWA() {
         )}
 
         {activeTab === 'jobs' && (
-          <MobileJobCreator />
+          <MobileScreen 
+            title="Create Job" 
+            onBack={() => setActiveTab('home')}
+          >
+            <MobileJobCreator />
+          </MobileScreen>
         )}
 
         {activeTab === 'documents' && (
-          <DocumentCapture />
+          <MobileScreen 
+            title="Digitize Document" 
+            onBack={() => setActiveTab('home')}
+          >
+            <DocumentCapture />
+          </MobileScreen>
         )}
       </main>
 

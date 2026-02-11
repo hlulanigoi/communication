@@ -30,7 +30,7 @@ import { useOcr } from '@/hooks/use-ocr';
 import { getVehicles, createJob, getClients, searchVehicleByRegistration, searchVehicleByVin } from '@/lib/api';
 import { toast } from 'sonner';
 
-export default function MobileJobCreator() {
+export default function MobileJobCreator({ showLayout = true }: { showLayout?: boolean }) {
   const [, setLocation] = useWouterLocation();
   
   // Job form state
@@ -187,22 +187,24 @@ export default function MobileJobCreator() {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background pb-6">
-        {/* Header */}
-        <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b border-border">
-          <div className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Smartphone className="w-5 h-5 text-primary" />
-              <h1 className="text-2xl font-display font-bold">Mobile Job Creator</h1>
+    <>
+      {showLayout ? (
+        <Layout>
+          <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background pb-6">
+            {/* Header */}
+            <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b border-border">
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                  <h1 className="text-2xl font-display font-bold">Mobile Job Creator</h1>
+                </div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                  Use your phone to capture vehicle details with ease
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">
-              Use your phone to capture vehicle details with ease
-            </p>
-          </div>
-        </div>
 
-        <div className="container mx-auto px-4 py-6 max-w-2xl">
+            <div className="container mx-auto px-4 py-6 max-w-2xl">
           {/* Status Bar */}
           <Card className="mb-6 industrial-border">
             <CardContent className="p-4 space-y-3">
@@ -601,7 +603,290 @@ export default function MobileJobCreator() {
             Create Job Card
           </Button>
         </div>
-      </div>
-    </Layout>
+            </div>
+        </Layout>
+      ) : (
+        <div className="bg-gradient-to-b from-primary/5 to-background space-y-4 px-4 py-4">
+          {/* Status Bar */}
+          <Card className="mb-6 industrial-border">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Photos: {camera.photos.length}
+                </span>
+                <Badge variant={camera.photos.length > 0 ? 'default' : 'outline'}>
+                  {camera.photos.length} captured
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Mic className="w-4 h-4" />
+                  Recordings: {voice.recordings.length}
+                </span>
+                <Badge variant={voice.recordings.length > 0 ? 'default' : 'outline'}>
+                  {voice.recordings.length} saved
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Location
+                </span>
+                {geo.location ? (
+                  <Badge variant="default" className="text-xs">
+                    {geo.location.latitude.toFixed(4)}, {geo.location.longitude.toFixed(4)}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">Not captured</Badge>
+                )}
+              </div>
+
+              {jobData.vehicleId && (
+                <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
+                  <span className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Vehicle Detected
+                  </span>
+                  <Badge className="bg-green-500/10 text-green-700">
+                    {vehicles.find((v) => v.id === jobData.vehicleId)?.make}
+                  </Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Tab Content - Mobile Optimized */}
+          <div className="space-y-4">
+            {/* Tab Navigation */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {['capture', 'audio', 'details'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`p-2 rounded-lg font-medium text-sm transition-colors ${
+                    activeTab === tab
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/75'
+                  }`}
+                >
+                  {tab === 'capture' && <><Camera className="w-4 h-4 inline mr-1" /></>}
+                  {tab === 'audio' && <><Mic className="w-4 h-4 inline mr-1" /></>}
+                  {tab === 'details' && <><Eye className="w-4 h-4 inline mr-1" /></>}
+                  <span className="hidden sm:inline">{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Capture Tab Content */}
+            {activeTab === 'capture' && (
+              <div className="space-y-4">
+                {!camera.isActive ? (
+                  <Button onClick={camera.startCamera} className="w-full" size="lg">
+                    <Camera className="w-5 h-5 mr-2" />
+                    Start Camera
+                  </Button>
+                ) : (
+                  <>
+                    <Card className="industrial-border overflow-hidden">
+                      <CardContent className="p-0">
+                        <video
+                          ref={camera.videoRef}
+                          className="w-full aspect-video object-cover"
+                        />
+                        <canvas ref={camera.canvasRef} className="hidden" />
+                      </CardContent>
+                    </Card>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={camera.capturePhoto}
+                        className="flex-1 gap-2"
+                        disabled={isOcrProcessing}
+                      >
+                        {isOcrProcessing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="w-4 h-4" />
+                            Capture
+                          </>
+                        )}
+                      </Button>
+                      <Button onClick={camera.stopCamera} variant="destructive">
+                        <Square className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {camera.photos.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Photos ({camera.photos.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-2">
+                        {camera.photos.map((photo, idx) => (
+                          <div key={idx} className="relative group">
+                            <img
+                              src={photo}
+                              alt={`Photo ${idx + 1}`}
+                              className="w-full h-20 object-cover rounded"
+                            />
+                            <Button
+                              onClick={() => camera.removePhoto(idx)}
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Audio Tab Content */}
+            {activeTab === 'audio' && (
+              <div className="space-y-4">
+                {voice.isRecording ? (
+                  <>
+                    <Card className="bg-red-50 border-red-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="animate-pulse text-red-600 font-bold">Recording...</div>
+                      </CardContent>
+                    </Card>
+                    <Button
+                      onClick={voice.stopRecording}
+                      variant="destructive"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Square className="w-5 h-5 mr-2" />
+                      Stop Recording
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={voice.startRecording}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                  >
+                    <Mic className="w-5 h-5 mr-2" />
+                    Start Recording
+                  </Button>
+                )}
+
+                {voice.recordings.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Recordings ({voice.recordings.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {voice.recordings.map((recording, idx) => (
+                        <div key={idx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                          <button
+                            onClick={() =>
+                              new Audio(recording).play().catch((e) =>
+                                console.error('Playback error:', e)
+                              )
+                            }
+                            className="p-2 hover:bg-secondary rounded transition-colors"
+                          >
+                            <Play className="w-4 h-4" />
+                          </button>
+                          <span className="flex-1 text-sm">Recording {idx + 1}</span>
+                          <Button
+                            onClick={() => voice.removeRecording(idx)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Details Tab Content */}
+            {activeTab === 'details' && (
+              <div className="space-y-4">
+                {/* 3D Vehicle Viewer */}
+                {jobData.vehicleId && (
+                  <Vehicle3DViewer
+                    vehicle={vehicles.find((v) => v.id === jobData.vehicleId)}
+                    showControls={true}
+                    height="h-80"
+                  />
+                )}
+
+                {/* Form Fields */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Vehicle</label>
+                    <select
+                      value={jobData.vehicleId}
+                      onChange={(e) => setJobData({ ...jobData, vehicleId: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg bg-background"
+                    >
+                      <option value="">Select Vehicle</option>
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.make} {v.model} ({v.licensePlate})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Job Type</label>
+                    <select
+                      value={jobData.type}
+                      onChange={(e) => setJobData({ ...jobData, type: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg bg-background"
+                    >
+                      <option>Inspection</option>
+                      <option>Repair</option>
+                      <option>Maintenance</option>
+                      <option>Diagnostic</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <Textarea
+                      value={jobData.description}
+                      onChange={(e) =>
+                        setJobData({ ...jobData, description: e.target.value })
+                      }
+                      placeholder="What needs to be done?"
+                      className="min-h-24"
+                    />
+                  </div>
+
+                  <Button onClick={handleCreateJob} className="w-full" size="lg">
+                    <Send className="w-5 h-5 mr-2" />
+                    Create Job Card
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

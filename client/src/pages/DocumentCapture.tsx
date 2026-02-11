@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function DocumentCapture() {
+export default function DocumentCapture({ showLayout = true }: { showLayout?: boolean }) {
   const camera = useCamera({ facingMode: 'environment' });
   const { processDocument, isProcessing, results, extractedData, reset } = useDocumentOcr();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,8 +80,10 @@ export default function DocumentCapture() {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background pb-6">
+    <>
+      {showLayout ? (
+        <Layout>
+          <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background pb-6 px-4">
         {/* Header */}
         <div className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b border-border">
           <div className="p-4">
@@ -333,6 +335,92 @@ export default function DocumentCapture() {
           )}
         </div>
       </div>
-    </Layout>
+        </Layout>
+      ) : (
+        <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background pb-6 px-4 pt-4">
+          {/* Mobile header - replicate key content */}
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="w-5 h-5 text-primary" />
+            <h1 className="text-xl font-display font-bold">Document Capture</h1>
+          </div>
+
+          <div className="space-y-4">
+            {/* Rest of tabs content will render normally */}
+            {/* Extracted Data Display */}
+            {results && (
+              <Card className="border-green-200 bg-green-50/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      Data Extracted
+                    </CardTitle>
+                    <Badge className="bg-green-600">
+                      {Math.round(results.confidence * 100)}%
+                    </Badge>
+                  </div>
+                </CardHeader>
+              </Card>
+            )}
+
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="camera" className="flex items-center gap-2 text-sm">
+                  <Camera className="w-4 h-4" />
+                  Camera
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="flex items-center gap-2 text-sm">
+                  <Upload className="w-4 h-4" />
+                  Upload
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Camera Tab */}
+              <TabsContent value="camera" className="space-y-3">
+                <Card className="overflow-hidden">
+                  <CardContent className="p-0">
+                    {!camera.isActive ? (
+                      <div className="aspect-video bg-secondary/50 flex items-center justify-center">
+                        <Button onClick={camera.startCamera} className="gap-2">
+                          <Camera className="w-4 h-4" />
+                          Start Camera
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        Camera active
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Upload Tab */}
+              <TabsContent value="upload" className="space-y-3">
+                <Card>
+                  <CardContent className="pt-6">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      ref={fileInputRef}
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full gap-2"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Select Image
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
