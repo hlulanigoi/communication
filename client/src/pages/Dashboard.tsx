@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle } from "lucide-react";
+import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle, Wrench, Car } from "lucide-react";
 import type { Student, Staff, JobInvoice } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileCard, MobileCardHeader, MobileCardTitle, MobileCardContent, MobileCardFooter } from "@/components/ui/mobile-card";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
