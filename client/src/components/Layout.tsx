@@ -39,6 +39,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex overflow-hidden font-sans selection:bg-primary/20">
       {/* Sidebar */}
