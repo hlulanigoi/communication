@@ -96,8 +96,182 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Mobile Dashboard */}
+      {isMobile ? (
+        <>
+          {/* Page Title */}
+          <div className="mb-4">
+            <h1 className="text-2xl font-display font-bold text-foreground">Mission Control</h1>
+            <p className="text-muted-foreground text-xs mt-1 uppercase font-bold tracking-wide">
+              Workshop Overview
+            </p>
+          </div>
+
+          {/* Quick Stats Grid - Mobile */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {stats.map((stat, i) => (
+              <MobileCard key={i} className="bg-gradient-to-br from-card to-card/50">
+                <div className="flex items-start justify-between mb-2">
+                  <div className={cn("p-2 rounded-lg", stat.color.replace('text', 'bg').replace('500', '500/10'))}>
+                    <stat.icon className={cn("h-4 w-4", stat.color)} />
+                  </div>
+                </div>
+                <div className="text-2xl font-black font-display tracking-tight">{loading ? "..." : stat.value}</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1">
+                  {stat.label}
+                </div>
+                <div className={cn("text-[10px] px-1.5 py-0.5 rounded font-mono font-bold inline-block mt-2", 
+                  stat.change.startsWith('+') ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary")}>
+                  {stat.change}
+                </div>
+              </MobileCard>
+            ))}
+          </div>
+
+          {/* Quick Actions - Mobile */}
+          <MobileCard className="mb-4 bg-gradient-to-br from-primary/10 to-card">
+            <MobileCardHeader>
+              <MobileCardTitle className="text-sm">Quick Actions</MobileCardTitle>
+            </MobileCardHeader>
+            <MobileCardContent className="space-y-2">
+              {[
+                { label: "Scan VIN", action: () => setLocation("/vehicles"), icon: Car },
+                { label: "Create Invoice", action: () => setLocation("/billing"), icon: Plus },
+                { label: "Lookup Part", action: () => setLocation("/inventory"), icon: Wrench },
+                { label: "New Job", action: () => setLocation("/jobs"), icon: Plus }
+              ].map(({ label, action, icon: Icon }, i) => (
+                <Button 
+                  key={i} 
+                  onClick={action}
+                  variant="outline" 
+                  className="w-full justify-start gap-3 h-12 font-bold text-xs uppercase"
+                  data-testid={`quick-action-${label.toLowerCase().replace(/ /g, '-')}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Button>
+              ))}
+            </MobileCardContent>
+          </MobileCard>
+
+          {/* Active Jobs - Mobile */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-bold text-sm uppercase">Urgent Tickets</h2>
+              <Button 
+                onClick={() => setLocation('/jobs')}
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-8 text-primary"
+              >
+                View All
+              </Button>
+            </div>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-24 bg-secondary/10 animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : mockJobs.length === 0 ? (
+              <MobileCard>
+                <div className="text-center py-6 text-muted-foreground">
+                  <p className="text-sm">No active jobs</p>
+                </div>
+              </MobileCard>
+            ) : (
+              <div className="space-y-3">
+                {mockJobs.slice(0, 3).map((job) => (
+                  <MobileCard 
+                    key={job.id}
+                    onClick={() => setLocation('/jobs')}
+                    className="border-l-4 border-l-primary"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm leading-tight uppercase tracking-tight mb-1">
+                          {job.description}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono bg-muted px-2 py-0.5 rounded">
+                            {job.id}
+                          </span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                            {job.vehicleId}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={job.priority === 'High' ? 'destructive' : job.priority === 'Medium' ? 'default' : 'secondary'}
+                        className="ml-2"
+                      >
+                        {job.priority}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{job.assignedTo}</span>
+                      <span className="text-primary font-bold uppercase">{(job as any).status}</span>
+                    </div>
+                  </MobileCard>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Vehicles - Mobile */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-bold text-sm uppercase">Active Fleet</h2>
+              <Button 
+                onClick={() => setLocation('/vehicles')}
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-8 text-primary"
+              >
+                View All
+              </Button>
+            </div>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="h-20 bg-secondary/10 animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {mockVehicles.slice(0, 2).map((vehicle) => (
+                  <MobileCard 
+                    key={vehicle.id}
+                    onClick={() => setLocation('/vehicles')}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
+                        <span className="font-bold text-sm font-display">{vehicle.make.substring(0,2)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono truncate">{vehicle.vin}</p>
+                      </div>
+                      <Badge 
+                        variant={vehicle.status === 'In Service' ? 'default' : 'secondary'} 
+                        className="capitalize shrink-0"
+                      >
+                        {vehicle.status}
+                      </Badge>
+                    </div>
+                  </MobileCard>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Desktop Dashboard (Existing) */}
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Mission Control</h1>
           <p className="text-muted-foreground mt-1 uppercase text-[10px] font-bold tracking-widest">Real-time workshop overview and performance metrics.</p>
