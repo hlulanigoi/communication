@@ -35,23 +35,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   // Desktop layout continues below
 
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
-
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'success', title: 'Invoice Created', message: 'Invoice INV-2024-001 has been created successfully.', timestamp: '2 mins ago' },
-    { id: 2, type: 'alert', title: 'Low Stock Alert', message: 'Brake Pads inventory is below minimum threshold.', timestamp: '15 mins ago' },
-    { id: 3, type: 'info', title: 'Job Assigned', message: 'New job JB-2024-156 has been assigned to you.', timestamp: '1 hour ago' },
-  ]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex overflow-hidden font-sans selection:bg-primary/20">
