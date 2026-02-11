@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [staff, setStaff] = useState<Staff[]>(mockStaff as any);
   const [invoices, setInvoices] = useState<JobInvoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadData = async () => {
