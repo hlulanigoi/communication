@@ -1979,6 +1979,210 @@ export class MemStorage implements IStorage {
   async deletePartsUsage(id: string): Promise<boolean> {
     return this.partsUsage.delete(id);
   }
+
+  // ============ FOLDERS METHODS ============
+
+  async getFolders(): Promise<Folder[]> {
+    return Array.from(this.folders.values());
+  }
+
+  async getFolder(id: string): Promise<Folder | undefined> {
+    return this.folders.get(id);
+  }
+
+  async getFolderByPath(path: string): Promise<Folder | undefined> {
+    return Array.from(this.folders.values()).find(f => f.path === path);
+  }
+
+  async getFoldersByParent(parentId: string | null): Promise<Folder[]> {
+    return Array.from(this.folders.values()).filter(f => f.parentId === parentId);
+  }
+
+  async getFolderTree(): Promise<Folder[]> {
+    // Return all folders sorted by path for tree building
+    return Array.from(this.folders.values()).sort((a, b) => a.path.localeCompare(b.path));
+  }
+
+  async createFolder(data: InsertFolder): Promise<Folder> {
+    const folder: Folder = {
+      id: randomUUID(),
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.folders.set(folder.id, folder);
+    return folder;
+  }
+
+  async updateFolder(id: string, data: Partial<InsertFolder>): Promise<Folder | undefined> {
+    const folder = this.folders.get(id);
+    if (!folder) return undefined;
+
+    const updated: Folder = {
+      ...folder,
+      ...data,
+      updatedAt: new Date(),
+    };
+    this.folders.set(id, updated);
+    return updated;
+  }
+
+  async deleteFolder(id: string): Promise<boolean> {
+    // Also delete all child folders and files
+    const childFolders = await this.getFoldersByParent(id);
+    for (const child of childFolders) {
+      await this.deleteFolder(child.id);
+    }
+    
+    // Delete files in this folder
+    const files = await this.getFilesByFolder(id);
+    for (const file of files) {
+      this.managementFiles.delete(file.id);
+    }
+    
+    return this.folders.delete(id);
+  }
+
+  // ============ MANAGEMENT FILES METHODS ============
+
+  async getManagementFiles(): Promise<ManagementFile[]> {
+    return Array.from(this.managementFiles.values()).sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA; // Newest first
+    });
+  }
+
+  async getManagementFile(id: string): Promise<ManagementFile | undefined> {
+    return this.managementFiles.get(id);
+  }
+
+  async getFilesByFolder(folderId: string): Promise<ManagementFile[]> {
+    return Array.from(this.managementFiles.values())
+      .filter(f => f.folderId === folderId)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async searchManagementFiles(query: string): Promise<ManagementFile[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.managementFiles.values()).filter(file =>
+      file.fileName.toLowerCase().includes(lowerQuery) ||
+      file.originalName.toLowerCase().includes(lowerQuery) ||
+      (file.description && file.description.toLowerCase().includes(lowerQuery)) ||
+      (file.tags && file.tags.toLowerCase().includes(lowerQuery)) ||
+      (file.folderPath && file.folderPath.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  async filterManagementFiles(filters: {
+    department?: string;
+    fileType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    folderId?: string;
+  }): Promise<ManagementFile[]> {
+    let files = Array.from(this.managementFiles.values());
+
+    if (filters.folderId) {
+      files = files.filter(f => f.folderId === filters.folderId);
+    }
+
+    if (filters.department) {
+      files = files.filter(f => f.folderPath?.includes(`/${filters.department}/`));
+    }
+
+    if (filters.fileType) {
+      files = files.filter(f => f.fileType.includes(filters.fileType!));
+    }
+
+    if (filters.startDate) {
+      files = files.filter(f => {
+        const fileDate = f.createdAt ? new Date(f.createdAt) : null;
+        return fileDate && fileDate >= filters.startDate!;
+      });
+    }
+
+    if (filters.endDate) {
+      files = files.filter(f => {
+        const fileDate = f.createdAt ? new Date(f.createdAt) : null;
+        return fileDate && fileDate <= filters.endDate!;
+      });
+    }
+
+    return files;
+  }
+
+  async createManagementFile(data: InsertManagementFile): Promise<ManagementFile> {
+    // Get folder path if folderId provided
+    let folderPath = null;
+    if (data.folderId) {
+      const folder = await this.getFolder(data.folderId);
+      folderPath = folder?.path || null;
+    }
+
+    const file: ManagementFile = {
+      id: randomUUID(),
+      ...data,
+      folderPath,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.managementFiles.set(file.id, file);
+    return file;
+  }
+
+  async updateManagementFile(id: string, data: Partial<InsertManagementFile>): Promise<ManagementFile | undefined> {
+    const file = this.managementFiles.get(id);
+    if (!file) return undefined;
+
+    // Update folder path if folderId changed
+    let folderPath = file.folderPath;
+    if (data.folderId && data.folderId !== file.folderId) {
+      const folder = await this.getFolder(data.folderId);
+      folderPath = folder?.path || null;
+    }
+
+    const updated: ManagementFile = {
+      ...file,
+      ...data,
+      folderPath,
+      updatedAt: new Date(),
+    };
+    this.managementFiles.set(id, updated);
+    return updated;
+  }
+
+  async deleteManagementFile(id: string): Promise<boolean> {
+    return this.managementFiles.delete(id);
+  }
+
+  async moveManagementFile(id: string, newFolderId: string): Promise<ManagementFile | undefined> {
+    return this.updateManagementFile(id, { folderId: newFolderId });
+  }
+
+  async incrementFileViews(id: string): Promise<void> {
+    const file = this.managementFiles.get(id);
+    if (file) {
+      const views = parseInt(file.views || "0") + 1;
+      file.views = views.toString();
+      file.lastAccessedAt = new Date();
+      this.managementFiles.set(id, file);
+    }
+  }
+
+  async incrementFileDownloads(id: string): Promise<void> {
+    const file = this.managementFiles.get(id);
+    if (file) {
+      const downloads = parseInt(file.downloads || "0") + 1;
+      file.downloads = downloads.toString();
+      file.lastAccessedAt = new Date();
+      this.managementFiles.set(id, file);
+    }
+  }
 }
 
 export const storage = new MemStorage();
