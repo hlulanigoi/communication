@@ -18,6 +18,8 @@ import {
   type PurchaseOrder, type InsertPurchaseOrder,
   type InventoryTransaction, type InsertInventoryTransaction,
   type PartsUsage, type InsertPartsUsage,
+  type Folder, type InsertFolder,
+  type ManagementFile, type InsertManagementFile,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
