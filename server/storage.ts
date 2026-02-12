@@ -194,6 +194,35 @@ export interface IStorage {
   getPartsUsageByItem(itemId: string): Promise<PartsUsage[]>;
   createPartsUsage(usage: InsertPartsUsage): Promise<PartsUsage>;
   deletePartsUsage(id: string): Promise<boolean>;
+  
+  // Folders
+  getFolders(): Promise<Folder[]>;
+  getFolder(id: string): Promise<Folder | undefined>;
+  getFolderByPath(path: string): Promise<Folder | undefined>;
+  getFoldersByParent(parentId: string | null): Promise<Folder[]>;
+  getFolderTree(): Promise<Folder[]>;
+  createFolder(folder: InsertFolder): Promise<Folder>;
+  updateFolder(id: string, folder: Partial<InsertFolder>): Promise<Folder | undefined>;
+  deleteFolder(id: string): Promise<boolean>;
+  
+  // Management Files
+  getManagementFiles(): Promise<ManagementFile[]>;
+  getManagementFile(id: string): Promise<ManagementFile | undefined>;
+  getFilesByFolder(folderId: string): Promise<ManagementFile[]>;
+  searchManagementFiles(query: string): Promise<ManagementFile[]>;
+  filterManagementFiles(filters: {
+    department?: string;
+    fileType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    folderId?: string;
+  }): Promise<ManagementFile[]>;
+  createManagementFile(file: InsertManagementFile): Promise<ManagementFile>;
+  updateManagementFile(id: string, file: Partial<InsertManagementFile>): Promise<ManagementFile | undefined>;
+  deleteManagementFile(id: string): Promise<boolean>;
+  moveManagementFile(id: string, newFolderId: string): Promise<ManagementFile | undefined>;
+  incrementFileViews(id: string): Promise<void>;
+  incrementFileDownloads(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
