@@ -2285,6 +2285,374 @@ export async function registerRoutes(
     }
   });
 
+  // ============ MANAGEMENT FILE SYSTEM ROUTES ============
+
+  // Get all folders
+  app.get("/api/management/folders", async (_req, res) => {
+    try {
+      const folders = await storage.getFolders();
+      res.json(folders);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get folder tree
+  app.get("/api/management/folders/tree", async (_req, res) => {
+    try {
+      const folders = await storage.getFolderTree();
+      res.json(folders);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get folder by ID
+  app.get("/api/management/folders/:id", async (req, res) => {
+    try {
+      const folder = await storage.getFolder(req.params.id);
+      if (!folder) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+      res.json(folder);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get folders by parent
+  app.get("/api/management/folders/parent/:parentId", async (req, res) => {
+    try {
+      const parentId = req.params.parentId === 'root' ? null : req.params.parentId;
+      const folders = await storage.getFoldersByParent(parentId);
+      res.json(folders);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Create folder
+  app.post("/api/management/folders", async (req, res) => {
+    try {
+      const { name, parentId, type, department, description, createdBy } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Folder name is required" });
+      }
+
+      // Build path
+      let path = `/${name}`;
+      if (parentId) {
+        const parent = await storage.getFolder(parentId);
+        if (!parent) {
+          return res.status(404).json({ message: "Parent folder not found" });
+        }
+        path = `${parent.path}/${name}`;
+      }
+
+      // Check if folder with same path already exists
+      const existing = await storage.getFolderByPath(path);
+      if (existing) {
+        return res.status(400).json({ message: "Folder with this path already exists" });
+      }
+
+      const folder = await storage.createFolder({
+        name,
+        parentId: parentId || null,
+        path,
+        type: type || 'custom',
+        department: department || null,
+        description: description || null,
+        createdBy: createdBy || 'System',
+      });
+
+      res.status(201).json(folder);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Update folder
+  app.put("/api/management/folders/:id", async (req, res) => {
+    try {
+      const folder = await storage.updateFolder(req.params.id, req.body);
+      if (!folder) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+      res.json(folder);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Delete folder
+  app.delete("/api/management/folders/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteFolder(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+      res.json({ message: "Folder deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ MANAGEMENT FILES ROUTES ============
+
+  // Get all files
+  app.get("/api/management/files", async (_req, res) => {
+    try {
+      const files = await storage.getManagementFiles();
+      res.json(files);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get files by folder
+  app.get("/api/management/files/folder/:folderId", async (req, res) => {
+    try {
+      const files = await storage.getFilesByFolder(req.params.folderId);
+      res.json(files);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get file by ID
+  app.get("/api/management/files/:id", async (req, res) => {
+    try {
+      const file = await storage.getManagementFile(req.params.id);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      // Increment view count
+      await storage.incrementFileViews(req.params.id);
+      
+      res.json(file);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Download file
+  app.get("/api/management/files/:id/download", async (req, res) => {
+    try {
+      const file = await storage.getManagementFile(req.params.id);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      if (!file.content) {
+        return res.status(404).json({ message: "File content not found" });
+      }
+
+      // Increment download count
+      await storage.incrementFileDownloads(req.params.id);
+
+      // Convert base64 to buffer
+      const fileBuffer = Buffer.from(file.content, 'base64');
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', file.fileType);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
+      res.send(fileBuffer);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Search files
+  app.get("/api/management/files/search/:query", async (req, res) => {
+    try {
+      const files = await storage.searchManagementFiles(req.params.query);
+      res.json(files);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Filter files
+  app.post("/api/management/files/filter", async (req, res) => {
+    try {
+      const filters = req.body;
+      const files = await storage.filterManagementFiles(filters);
+      res.json(files);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Upload file
+  app.post("/api/management/files/upload", async (req, res) => {
+    try {
+      const {
+        fileName,
+        originalName,
+        fileType,
+        fileSize,
+        fileExtension,
+        folderId,
+        content,
+        description,
+        tags,
+        uploadedBy,
+        uploadedByName,
+      } = req.body;
+
+      if (!fileName || !originalName || !fileType || !content) {
+        return res.status(400).json({ 
+          message: "fileName, originalName, fileType, and content are required" 
+        });
+      }
+
+      // Auto-create year/month folders if uploading to department folder
+      let targetFolderId = folderId;
+      if (folderId) {
+        const folder = await storage.getFolder(folderId);
+        if (folder && folder.type === 'department') {
+          // Create year folder
+          const now = new Date();
+          const year = now.getFullYear().toString();
+          const yearPath = `${folder.path}/${year}`;
+          
+          let yearFolder = await storage.getFolderByPath(yearPath);
+          if (!yearFolder) {
+            yearFolder = await storage.createFolder({
+              name: year,
+              parentId: folder.id,
+              path: yearPath,
+              type: 'year',
+              department: folder.department,
+              description: `${year} files`,
+              createdBy: uploadedBy || 'System',
+            });
+          }
+
+          // Create month folder
+          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                             'July', 'August', 'September', 'October', 'November', 'December'];
+          const monthName = monthNames[now.getMonth()];
+          const monthPath = `${yearPath}/${monthName}`;
+          
+          let monthFolder = await storage.getFolderByPath(monthPath);
+          if (!monthFolder) {
+            monthFolder = await storage.createFolder({
+              name: monthName,
+              parentId: yearFolder.id,
+              path: monthPath,
+              type: 'month',
+              department: folder.department,
+              description: `${monthName} ${year} files`,
+              createdBy: uploadedBy || 'System',
+            });
+          }
+
+          targetFolderId = monthFolder.id;
+        }
+      }
+
+      const file = await storage.createManagementFile({
+        fileName,
+        originalName,
+        fileType,
+        fileSize,
+        fileExtension: fileExtension || null,
+        folderId: targetFolderId || null,
+        folderPath: null, // Will be set automatically
+        content,
+        thumbnail: null,
+        description: description || null,
+        tags: tags || null,
+        metadata: JSON.stringify({ uploadedAt: new Date() }),
+        uploadedBy: uploadedBy || 'System',
+        uploadedByName: uploadedByName || null,
+        version: "1",
+        previousVersionId: null,
+        isLatestVersion: 'true',
+        views: "0",
+        downloads: "0",
+        lastAccessedAt: null,
+      });
+
+      res.status(201).json(file);
+    } catch (error: any) {
+      console.error("File upload error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update file
+  app.put("/api/management/files/:id", async (req, res) => {
+    try {
+      const file = await storage.updateManagementFile(req.params.id, req.body);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      res.json(file);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Move file to different folder
+  app.post("/api/management/files/:id/move", async (req, res) => {
+    try {
+      const { folderId } = req.body;
+      if (!folderId) {
+        return res.status(400).json({ message: "folderId is required" });
+      }
+
+      const file = await storage.moveManagementFile(req.params.id, folderId);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      res.json(file);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Delete file
+  app.delete("/api/management/files/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteManagementFile(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      res.json({ message: "File deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Bulk delete files
+  app.post("/api/management/files/bulk-delete", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "File IDs array is required" });
+      }
+      
+      let deletedCount = 0;
+      for (const id of ids) {
+        if (await storage.deleteManagementFile(id)) {
+          deletedCount++;
+        }
+      }
+      
+      res.json({ 
+        message: `${deletedCount} file(s) deleted successfully`,
+        deletedCount 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   return httpServer;
 
 }
