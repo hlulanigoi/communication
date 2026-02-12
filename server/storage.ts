@@ -931,6 +931,50 @@ export class MemStorage implements IStorage {
     sampleInventoryItems.forEach(item => {
       this.inventoryItems.set(item.id, item);
     });
+    
+    // Seed Management Folders - Create department structure
+    const sampleFolders: Folder[] = [
+      {
+        id: randomUUID(),
+        name: "HR",
+        parentId: null,
+        path: "/HR",
+        type: "department",
+        department: "HR",
+        description: "Human Resources documents and files",
+        createdBy: "System",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        name: "Finance",
+        parentId: null,
+        path: "/Finance",
+        type: "department",
+        department: "Finance",
+        description: "Financial documents, invoices, and reports",
+        createdBy: "System",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        name: "Operations",
+        parentId: null,
+        path: "/Operations",
+        type: "department",
+        department: "Operations",
+        description: "Operational documents and procedures",
+        createdBy: "System",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+    
+    sampleFolders.forEach(folder => {
+      this.folders.set(folder.id, folder);
+    });
   }
 
   // User methods
