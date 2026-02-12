@@ -38,6 +38,7 @@ function Router() {
       <Route path="/billing" component={Billing} />
       <Route path="/academy" component={Academy} />
       <Route path="/admin-bills" component={AdminBills} />
+      <Route path="/management" component={Management} />
       <Route path="/dvi" component={DVI} />
       <Route path="/documents" component={DocumentCenter} />
       <Route path="/communication" component={Communication} />
