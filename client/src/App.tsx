@@ -18,6 +18,7 @@ import MobileJobCreator from "@/pages/MobileJobCreator";
 import DocumentCapture from "@/pages/DocumentCapture";
 import Academy from "@/pages/Academy";
 import AdminBills from "@/pages/AdminBills";
+import Management from "@/pages/Management";
 
 import DVI from "@/pages/DVI";
 import DocumentCenter from "@/pages/DocumentCenter";
