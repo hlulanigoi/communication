@@ -607,3 +607,71 @@ export const insertPartsUsageSchema = createInsertSchema(partsUsage).omit({
 
 export type InsertPartsUsage = z.infer<typeof insertPartsUsageSchema>;
 export type PartsUsage = typeof partsUsage.$inferSelect;
+
+// ============ MANAGEMENT FILE SYSTEM TABLES ============
+
+// Folders table - hierarchical folder structure
+export const folders = pgTable("folders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  parentId: varchar("parent_id").references((): any => folders.id, { onDelete: 'cascade' }),
+  path: text("path").notNull(), // Full path like "/HR/2024/January"
+  type: text("type").notNull().default('custom'), // "department", "year", "month", "custom"
+  department: text("department"), // "HR", "Finance", "Operations" for quick filtering
+  description: text("description"),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFolderSchema = createInsertSchema(folders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertFolder = z.infer<typeof insertFolderSchema>;
+export type Folder = typeof folders.$inferSelect;
+
+// Management Files table - stores all company files
+export const managementFiles = pgTable("management_files", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(), // Original uploaded filename
+  fileType: text("file_type").notNull(), // MIME type
+  fileSize: text("file_size").notNull(), // Size in bytes
+  fileExtension: text("file_extension"), // .pdf, .docx, etc.
+  
+  folderId: varchar("folder_id").references(() => folders.id, { onDelete: 'cascade' }),
+  folderPath: text("folder_path"), // Denormalized for quick access
+  
+  content: text("content"), // Base64 encoded file content
+  thumbnail: text("thumbnail"), // Optional thumbnail for images/PDFs
+  
+  description: text("description"),
+  tags: text("tags"), // JSON array of tags
+  metadata: text("metadata"), // JSON for additional file metadata
+  
+  uploadedBy: text("uploaded_by").notNull(),
+  uploadedByName: text("uploaded_by_name"),
+  
+  version: text("version").default("1"), // For versioning support
+  previousVersionId: varchar("previous_version_id").references((): any => managementFiles.id, { onDelete: 'set null' }),
+  isLatestVersion: text("is_latest_version").notNull().default('true'),
+  
+  views: text("views").default("0"), // View count
+  downloads: text("downloads").default("0"), // Download count
+  lastAccessedAt: timestamp("last_accessed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertManagementFileSchema = createInsertSchema(managementFiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertManagementFile = z.infer<typeof insertManagementFileSchema>;
+export type ManagementFile = typeof managementFiles.$inferSelect;
