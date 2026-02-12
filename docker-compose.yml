@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: communication-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: communication
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - communication-network
+
+  # Node.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: communication-app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/communication
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dist:/app/dist
+    restart: unless-stopped
+    networks:
+      - communication-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  communication-network:
+    driver: bridge

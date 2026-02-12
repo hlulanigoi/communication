@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.DS_Store
+.env.local
+.replit
+.emergent
+.local
+migrations
