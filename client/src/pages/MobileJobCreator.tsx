@@ -331,17 +331,39 @@ export default function MobileJobCreator({ showLayout = true }: { showLayout?: b
                         </div>
                         
                         {/* Camera Controls Overlay */}
-                        <div className="absolute bottom-4 left-0 right-0 px-4 flex justify-between items-center">
-                          <Button onClick={camera.switchCamera} variant="outline" size="icon" className="rounded-full bg-background/80 backdrop-blur border-border/50 h-10 w-10">
+                        <div className="absolute bottom-4 left-0 right-0 px-4 flex justify-between items-center z-50">
+                          <Button 
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              camera.switchCamera();
+                            }} 
+                            variant="outline" 
+                            size="icon" 
+                            className="rounded-full bg-background/80 backdrop-blur border-border/50 h-10 w-10 pointer-events-auto touch-none"
+                          >
                             <RotateCcw className="w-5 h-5" />
                           </Button>
                           <Button 
-                            onClick={camera.capturePhoto} 
-                            className="w-16 h-16 rounded-full bg-white border-4 border-primary hover:scale-105 active:scale-95 transition-transform shadow-lg p-0"
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              camera.capturePhoto();
+                            }} 
+                            className="w-16 h-16 rounded-full bg-white border-4 border-primary hover:scale-105 active:scale-95 transition-transform shadow-lg p-0 pointer-events-auto touch-none"
                           >
                             <div className="w-12 h-12 rounded-full bg-white border-2 border-primary/20" />
                           </Button>
-                          <Button onClick={camera.stopCamera} variant="destructive" size="icon" className="rounded-full h-10 w-10">
+                          <Button 
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              camera.stopCamera();
+                            }} 
+                            variant="destructive" 
+                            size="icon" 
+                            className="rounded-full h-10 w-10 pointer-events-auto touch-none"
+                          >
                             <X className="w-5 h-5" />
                           </Button>
                         </div>

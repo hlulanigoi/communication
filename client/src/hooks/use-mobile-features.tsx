@@ -29,11 +29,13 @@ export function useCamera(options: CameraOptions = {}) {
   const startCamera = useCallback(async () => {
     try {
       setError(null);
-      const constraints = {
+      const constraints: MediaStreamConstraints = {
         video: {
-          facingMode,
-          width: { max: maxWidth },
-          height: { max: maxHeight },
+          facingMode: { ideal: facingMode },
+          width: { ideal: maxWidth },
+          height: { ideal: maxHeight },
+          aspectRatio: { ideal: 4/3 },
+          frameRate: { ideal: 30 }
         },
         audio: false,
       };
