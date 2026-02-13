@@ -25,7 +25,7 @@ export async function registerMobilePortalRoutes(app: Express): Promise<void> {
       expiresAt.setDate(expiresAt.getDate() + (expiresInDays || 30));
 
       // Build access URL
-      const baseUrl = process.env.VITE_APP_URL || "http://localhost:5000";
+      const baseUrl = process.env.VITE_APP_URL || "http://localhost:3000";
       const accessUrl = `${baseUrl}/mobile-portal?token=${tokenString}&action=${actionType}`;
 
       // Create QR code URL (would generate QR in client-side typically)

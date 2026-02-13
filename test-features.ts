@@ -1,5 +1,5 @@
 // Using native Node.js fetch (available in Node 18+)
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:3000/api';
 
 async function testFeatures() {
   console.log('🧪 Testing JustFix Auto Electrix Backend Features\n');
