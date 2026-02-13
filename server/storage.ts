@@ -216,6 +216,7 @@ export interface IStorage {
   getJobs(): Promise<Job[]>;
   getJob(id: string): Promise<Job | undefined>;
   getJobsByStatus(status: string): Promise<Job[]>;
+  getJobsByPriority(priority: string): Promise<Job[]>;
   getJobsByVehicle(vehicleId: string): Promise<Job[]>;
   getJobsByClient(clientId: string): Promise<Job[]>;
   getJobsByAssignee(assignedToId: string): Promise<Job[]>;
@@ -444,7 +445,46 @@ export class DatabaseStorage implements IStorage {
     return await this.db.select().from(jobs).where(eq(jobs.clientId, clientId));
   }
 
-  async createJob(job: InsertJob): Promise<Job> {
+  async getJobsByStatus(status: string): Promise<Job[]> {
+    return await this.db.select().from(jobs).where(eq(jobs.status, status));
+  }
+
+  async getJobsByPriority(priority: string): Promise<Job[]> {
+    return await this.db.select().from(jobs).where(eq(jobs.priority, priority));
+  }
+
+  async getJobsByVehicle(vehicleId: string): Promise<Job[]> {
+    return await this.db.select().from(jobs).where(eq(jobs.vehicleId, vehicleId));
+  }
+
+  async getJobsByAssignee(assignedToId: string): Promise<Job[]> {
+    return await this.db.select().from(jobs).where(eq(jobs.assignedToId, assignedToId));
+  }
+
+  async updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined> {
+    const updated = await this.db
+      .update(jobs)
+      .set(job)
+      .where(eq(jobs.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async getNextJobNumber(): Promise<string> {
+    const result = await this.db
+      .select({
+        jobNumber: jobs.jobNumber,
+      })
+      .from(jobs)
+      .orderBy(desc(jobs.jobNumber))
+      .limit(1);
+
+    if (result.length === 0) return "JOB-001";
+
+    const lastNumber = result[0].jobNumber || "JOB-000";
+    const num = parseInt(lastNumber.split("-")[1] || "0") + 1;
+    return `JOB-${String(num).padStart(3, "0")}`;
+  }
     const newJob = { ...job, id: randomUUID() };
     await this.db.insert(jobs).values(newJob);
     return newJob as Job;
@@ -2095,6 +2135,16 @@ export class MemStorage implements IStorage {
   async getJobsByStatus(status: string): Promise<Job[]> {
     return Array.from(this.jobs.values())
       .filter(job => job.status === status)
+      .sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA;
+      });
+  }
+
+  async getJobsByPriority(priority: string): Promise<Job[]> {
+    return Array.from(this.jobs.values())
+      .filter(job => job.priority === priority)
       .sort((a, b) => {
         const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
         const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;

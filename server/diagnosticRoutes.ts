@@ -255,4 +255,54 @@ export async function registerDiagnosticRoutes(app: Express): Promise<void> {
       res.status(500).json({ message: error.message });
     }
   });
+
+  // POST /api/diagnostics/:id/create-job - Create a job from a diagnostic finding
+  app.post("/api/diagnostics/:id/create-job", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { assignedTo, priority, estimatedHours } = req.body;
+
+      // Get the diagnostic
+      const diagnostic = await storage.getVehicleDiagnostic(id);
+      if (!diagnostic) {
+        return res.status(404).json({ message: "Diagnostic finding not found" });
+      }
+
+      // Check if job already created
+      if (diagnostic.jobCreated === 'true' && diagnostic.jobId) {
+        return res.status(400).json({ 
+          message: "Job already created for this diagnostic",
+          jobId: diagnostic.jobId 
+        });
+      }
+
+      // Create the job
+      const newJob = await storage.createJob({
+        vehicleId: diagnostic.vehicleId,
+        clientId: "", // Will need to fetch from vehicle
+        jobType: "Repair",
+        description: `${diagnostic.problemName} - ${diagnostic.partCategory}\n\n${diagnostic.notes || ''}`,
+        status: "Pending",
+        priority: priority || "Medium",
+        estimatedHours: estimatedHours || diagnostic.estimatedRepairTime,
+        assignedTo,
+        createdBy: "System",
+      });
+
+      // Update diagnostic with job reference
+      const updated = await storage.updateVehicleDiagnostic(id, {
+        jobCreated: 'true',
+        jobId: newJob.id,
+        status: "Quoted", // Move to quoted status
+      });
+
+      res.status(201).json({
+        diagnostic: updated,
+        job: newJob,
+        message: "Job created successfully from diagnostic",
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
 }

@@ -765,6 +765,12 @@ export async function getJobsByStatus(status: string): Promise<Job[]> {
   return res.json();
 }
 
+export async function getJobsByPriority(priority: string): Promise<Job[]> {
+  const res = await fetch(`${API_BASE}/jobs/by-priority/${priority}`);
+  if (!res.ok) throw new Error('Failed to fetch jobs by priority');
+  return res.json();
+}
+
 export async function createJob(job: Partial<Job>): Promise<Job> {
   const res = await fetch(`${API_BASE}/jobs`, {
     method: 'POST',

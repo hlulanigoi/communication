@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { mockVehicles, mockJobs, mockStaff } from "@/lib/mockData";
-import { getStudents, getStaff, getInvoices } from "@/lib/api";
+import { getStudents, getStaff, getInvoices, getJobsByPriority, getJob } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowUpRight, ArrowRight, MoreHorizontal, Clock, AlertTriangle, CheckCircle2, Plus, AlertCircle, Wrench, Car } from "lucide-react";
-import type { Student, Staff, JobInvoice } from "@shared/schema";
+import type { Student, Staff, JobInvoice, Job } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileCard, MobileCardHeader, MobileCardTitle, MobileCardContent, MobileCardFooter } from "@/components/ui/mobile-card";
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [staff, setStaff] = useState<Staff[]>(mockStaff as any);
   const [invoices, setInvoices] = useState<JobInvoice[]>([]);
+  const [urgentJobs, setUrgentJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
@@ -51,6 +52,15 @@ export default function Dashboard() {
         } catch (err) {
           console.error("Failed to load invoices, using fallback");
           setInvoices([]);
+        }
+
+        // Fetch urgent jobs
+        try {
+          const urgentData = await getJobsByPriority('Urgent');
+          setUrgentJobs(urgentData);
+        } catch (err) {
+          console.error("Failed to load urgent jobs, using mock data");
+          setUrgentJobs(mockJobs.filter(j => j.priority === 'High').slice(0, 4) as any);
         }
       } catch (err) {
         console.error("Dashboard load error:", err);
@@ -367,16 +377,16 @@ export default function Dashboard() {
                   <div key={i} className="h-20 bg-secondary/10 animate-pulse rounded" />
                 ))}
               </div>
-            ) : mockJobs.length === 0 ? (
+            ) : urgentJobs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">No active jobs</p>
+                <p className="text-sm">No urgent jobs</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {mockJobs.slice(0, 4).map((job) => (
+                {urgentJobs.slice(0, 4).map((job) => (
                   <div 
                     key={job.id} 
-                    onClick={() => setLocation('/jobs')}
+                    onClick={() => setLocation(`/service-tickets/${job.id}`)}
                     className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all cursor-pointer rounded"
                   >
                     <div className={`mt-1 p-1.5 ${

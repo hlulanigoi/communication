@@ -26,6 +26,8 @@ import QRManagement from "@/pages/QRManagement";
 import DVI from "@/pages/DVI";
 import DocumentCenter from "@/pages/DocumentCenter";
 import DiagnosticFinder from "@/pages/DiagnosticFinder";
+import AdminProblems from "@/pages/AdminProblems";
+import ServiceTicket from "@/pages/ServiceTicket";
 
 function Router() {
   return (
@@ -33,6 +35,7 @@ function Router() {
       <Route path="/field" component={FieldTechPWA} />
       <Route path="/" component={Dashboard} />
       <Route path="/search" component={Search} />
+      <Route path="/service-tickets/:id" component={ServiceTicket} />
       <Route path="/mobile-job-creator" component={MobileJobCreator} />
       <Route path="/document-capture" component={DocumentCapture} />
       <Route path="/vehicles" component={VehicleList} />
@@ -51,6 +54,7 @@ function Router() {
       <Route path="/mobile-portal" component={MobilePortal} />
       <Route path="/qr-management" component={QRManagement} />
       <Route path="/diagnostics/:vehicleId/:inspectionId" component={DiagnosticFinder} />
+      <Route path="/admin-problems" component={AdminProblems} />
       
       {/* Fallback routes for demos */}
       <Route path="/people" component={ClientDirectory} />

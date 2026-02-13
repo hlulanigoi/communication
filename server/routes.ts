@@ -1562,6 +1562,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/jobs/by-priority/:priority", async (req, res) => {
+    try {
+      const jobs = await storage.getJobsByPriority(req.params.priority);
+      res.json(jobs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.get("/api/jobs/by-vehicle/:vehicleId", async (req, res) => {
     try {
       const jobs = await storage.getJobsByVehicle(req.params.vehicleId);

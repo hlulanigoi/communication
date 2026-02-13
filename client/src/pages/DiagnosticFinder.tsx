@@ -48,6 +48,14 @@ export default function DiagnosticFinder() {
   const [newProblemSeverity, setNewProblemSeverity] = useState("Moderate");
   const [newProblemDescription, setNewProblemDescription] = useState("");
 
+  // State for editing diagnostic cost/details
+  const [editingDiagnosticId, setEditingDiagnosticId] = useState<string | null>(null);
+  const [editingDiagnosticData, setEditingDiagnosticData] = useState({
+    estimatedCost: "",
+    estimatedRepairTime: "",
+    notes: "",
+  });
+
   // Load problems from library
   useEffect(() => {
     if (vehicleId && inspectionId) {
@@ -201,6 +209,65 @@ export default function DiagnosticFinder() {
     } catch (error) {
       console.error("Failed to remove diagnostic:", error);
     }
+  };
+
+  const createJobFromDiagnostic = async (diagnosticId: string, estimatedTime?: string) => {
+    try {
+      const response = await fetch(`/api/diagnostics/${diagnosticId}/create-job`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priority: "Medium",
+          estimatedHours: estimatedTime,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Reload diagnostics to show updated status
+        loadCurrentDiagnostics();
+        alert(`Job created successfully! Job ID: ${result.job.id}`);
+      } else {
+        const error = await response.json();
+        alert(error.message || "Failed to create job");
+      }
+    } catch (error) {
+      console.error("Failed to create job:", error);
+      alert("Failed to create job from diagnostic");
+    }
+  };
+
+  const updateDiagnosticCosts = async () => {
+    if (!editingDiagnosticId) return;
+
+    try {
+      const response = await fetch(`/api/diagnostics/${editingDiagnosticId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingDiagnosticData),
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setCurrentDiagnostics(
+          currentDiagnostics.map((d) =>
+            d.id === editingDiagnosticId ? updated : d
+          )
+        );
+        setEditingDiagnosticId(null);
+      }
+    } catch (error) {
+      console.error("Failed to update diagnostic:", error);
+    }
+  };
+
+  const startEditingCosts = (diagnostic: VehicleDiagnostic) => {
+    setEditingDiagnosticId(diagnostic.id);
+    setEditingDiagnosticData({
+      estimatedCost: diagnostic.estimatedCost || "",
+      estimatedRepairTime: diagnostic.estimatedRepairTime || "",
+      notes: diagnostic.notes || "",
+    });
   };
 
   const getSeverityColor = (severity: string) => {
@@ -376,34 +443,155 @@ export default function DiagnosticFinder() {
           ) : (
             <div className="space-y-2">
               {currentDiagnostics.map((diagnostic) => (
-                <Card key={diagnostic.id} className="p-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                <div key={diagnostic.id}>
+                  {editingDiagnosticId === diagnostic.id ? (
+                    // Edit Mode
+                    <Card className="p-4 bg-blue-50 border-blue-200">
+                      <div className="space-y-3">
                         <h3 className="font-medium">{diagnostic.problemName}</h3>
-                        <Badge className={getSeverityColor(diagnostic.severity)}>
-                          {diagnostic.severity}
-                        </Badge>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Notes
+                          </label>
+                          <textarea
+                            className="w-full border rounded px-2 py-1 text-sm"
+                            rows={2}
+                            value={editingDiagnosticData.notes}
+                            onChange={(e) =>
+                              setEditingDiagnosticData({
+                                ...editingDiagnosticData,
+                                notes: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">
+                              Est. Cost
+                            </label>
+                            <Input
+                              placeholder="$200-500"
+                              value={editingDiagnosticData.estimatedCost}
+                              onChange={(e) =>
+                                setEditingDiagnosticData({
+                                  ...editingDiagnosticData,
+                                  estimatedCost: e.target.value,
+                                })
+                              }
+                              className="text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">
+                              Est. Time
+                            </label>
+                            <Input
+                              placeholder="2-4 hours"
+                              value={editingDiagnosticData.estimatedRepairTime}
+                              onChange={(e) =>
+                                setEditingDiagnosticData({
+                                  ...editingDiagnosticData,
+                                  estimatedRepairTime: e.target.value,
+                                })
+                              }
+                              className="text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={updateDiagnosticCosts}
+                            className="flex-1"
+                          >
+                            Save Changes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingDiagnosticId(null)}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        {diagnostic.partCategory}
-                      </p>
-                      {diagnostic.notes && (
-                        <p className="text-sm text-gray-700 mt-2">{diagnostic.notes}</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-2">
-                        Status: {diagnostic.status}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeDiagnostic(diagnostic.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
+                    </Card>
+                  ) : (
+                    // View Mode
+                    <Card className="p-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-medium">{diagnostic.problemName}</h3>
+                            <Badge className={getSeverityColor(diagnostic.severity)}>
+                              {diagnostic.severity}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {diagnostic.partCategory}
+                          </p>
+                          {diagnostic.notes && (
+                            <p className="text-sm text-gray-700 mt-2">
+                              {diagnostic.notes}
+                            </p>
+                          )}
+                          <div className="mt-3 flex gap-2 flex-wrap">
+                            <Badge variant="outline">Status: {diagnostic.status}</Badge>
+                            {diagnostic.estimatedCost && (
+                              <Badge variant="outline">Cost: {diagnostic.estimatedCost}</Badge>
+                            )}
+                            {diagnostic.estimatedRepairTime && (
+                              <Badge variant="outline">
+                                Time: {diagnostic.estimatedRepairTime}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => startEditingCosts(diagnostic)}
+                          >
+                            Edit Costs
+                          </Button>
+                          {diagnostic.jobCreated !== 'true' ? (
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                createJobFromDiagnostic(
+                                  diagnostic.id,
+                                  diagnostic.estimatedRepairTime
+                                )
+                              }
+                              className="whitespace-nowrap"
+                            >
+                              Create Job
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled
+                              className="whitespace-nowrap"
+                            >
+                              Job Created
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDiagnostic(diagnostic.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
               ))}
             </div>
           )}
