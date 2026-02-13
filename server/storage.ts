@@ -3,6 +3,10 @@ import {
   type Student, type InsertStudent, 
   type Document, type InsertDocument,
   type Staff, type InsertStaff,
+  type LeaveRequest, type InsertLeaveRequest,
+  type PayrollRecord, type InsertPayrollRecord,
+  type PerformanceReview, type InsertPerformanceReview,
+  type EmployeeBenefit, type InsertEmployeeBenefit,
   type Client, type InsertClient,
   type OperatingExpense, type InsertOperatingExpense,
   type JobInvoice, type InsertJobInvoice,
@@ -18,8 +22,45 @@ import {
   type PurchaseOrder, type InsertPurchaseOrder,
   type InventoryTransaction, type InsertInventoryTransaction,
   type PartsUsage, type InsertPartsUsage,
+  type QRToken, type InsertQRToken,
+  type VehicleProblem, type InsertVehicleProblem,
+  type VehicleDiagnostic, type InsertVehicleDiagnostic,
+  users,
+  students,
+  documents,
+  staff,
+  leaveRequests,
+  payrollRecords,
+  performanceReviews,
+  employeeBenefits,
+  clients,
+  vehicles,
+  jobs,
+  suppliers,
+  operatingExpenses,
+  jobInvoices,
+  testimonials,
+  hrNotes,
+  certificates,
+  vehicleInspections,
+  inspectionMedia,
+  inventoryItems,
+  purchaseOrders,
+  inventoryTransactions,
+  partsUsage,
+  qrTokens,
+  vehicleProblems,
+  vehicleDiagnostics,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Client as PgClient } from "pg";
+import { eq } from "drizzle-orm";
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+// Load environment variables from .env.local
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // modify the interface with any CRUD methods
 // you might need
@@ -62,6 +103,41 @@ export interface IStorage {
   createStaff(staff: InsertStaff): Promise<Staff>;
   updateStaff(id: string, staff: Partial<InsertStaff>): Promise<Staff | undefined>;
   deleteStaff(id: string): Promise<boolean>;
+  
+  // Leave Requests
+  getLeaveRequests(): Promise<LeaveRequest[]>;
+  getLeaveRequestsByStaff(staffId: string): Promise<LeaveRequest[]>;
+  getLeaveRequestsByStatus(status: string): Promise<LeaveRequest[]>;
+  getLeaveRequest(id: string): Promise<LeaveRequest | undefined>;
+  createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
+  updateLeaveRequest(id: string, request: Partial<InsertLeaveRequest>): Promise<LeaveRequest | undefined>;
+  deleteLeaveRequest(id: string): Promise<boolean>;
+  
+  // Payroll Records
+  getPayrollRecords(): Promise<PayrollRecord[]>;
+  getPayrollRecordsByStaff(staffId: string): Promise<PayrollRecord[]>;
+  getPayrollRecordsByPeriod(startDate: Date, endDate: Date): Promise<PayrollRecord[]>;
+  getPayrollRecord(id: string): Promise<PayrollRecord | undefined>;
+  createPayrollRecord(record: InsertPayrollRecord): Promise<PayrollRecord>;
+  updatePayrollRecord(id: string, record: Partial<InsertPayrollRecord>): Promise<PayrollRecord | undefined>;
+  deletePayrollRecord(id: string): Promise<boolean>;
+  
+  // Performance Reviews
+  getPerformanceReviews(): Promise<PerformanceReview[]>;
+  getPerformanceReviewsByStaff(staffId: string): Promise<PerformanceReview[]>;
+  getPerformanceReviewsForReviewer(reviewerId: string): Promise<PerformanceReview[]>;
+  getPerformanceReview(id: string): Promise<PerformanceReview | undefined>;
+  createPerformanceReview(review: InsertPerformanceReview): Promise<PerformanceReview>;
+  updatePerformanceReview(id: string, review: Partial<InsertPerformanceReview>): Promise<PerformanceReview | undefined>;
+  deletePerformanceReview(id: string): Promise<boolean>;
+  
+  // Employee Benefits
+  getEmployeeBenefits(): Promise<EmployeeBenefit[]>;
+  getEmployeeBenefitsByStaff(staffId: string): Promise<EmployeeBenefit[]>;
+  getEmployeeBenefit(id: string): Promise<EmployeeBenefit | undefined>;
+  createEmployeeBenefit(benefit: InsertEmployeeBenefit): Promise<EmployeeBenefit>;
+  updateEmployeeBenefit(id: string, benefit: Partial<InsertEmployeeBenefit>): Promise<EmployeeBenefit | undefined>;
+  deleteEmployeeBenefit(id: string): Promise<boolean>;
   
   // Clients
   getClients(): Promise<Client[]>;
@@ -192,6 +268,344 @@ export interface IStorage {
   getPartsUsageByItem(itemId: string): Promise<PartsUsage[]>;
   createPartsUsage(usage: InsertPartsUsage): Promise<PartsUsage>;
   deletePartsUsage(id: string): Promise<boolean>;
+
+  // QR Tokens
+  createQRToken(token: InsertQRToken): Promise<QRToken>;
+  getQRToken(tokenId: string): Promise<QRToken | undefined>;
+  listQRTokens(): Promise<QRToken[]>;
+  updateQRTokenUsage(tokenId: string): Promise<QRToken | undefined>;
+  revokeQRToken(tokenId: string): Promise<QRToken | undefined>;
+  deleteQRToken(tokenId: string): Promise<boolean>;
+  getQRTokenStats(): Promise<{ activeCount: number; expiredCount: number; revokedCount: number }>;
+  getMobileSubmissions(limit: number): Promise<any[]>;
+
+  // Vehicle Problems (Library)
+  getVehicleProblems(): Promise<VehicleProblem[]>;
+  getVehicleProblem(id: string): Promise<VehicleProblem | undefined>;
+  getProblemsByCategory(category: string): Promise<VehicleProblem[]>;
+  searchProblems(query: string): Promise<VehicleProblem[]>;
+  createVehicleProblem(problem: InsertVehicleProblem): Promise<VehicleProblem>;
+  updateVehicleProblem(id: string, problem: Partial<InsertVehicleProblem>): Promise<VehicleProblem | undefined>;
+  deleteVehicleProblem(id: string): Promise<boolean>;
+  
+  // Vehicle Diagnostics (Findings)
+  createVehicleDiagnostic(diagnostic: InsertVehicleDiagnostic): Promise<VehicleDiagnostic>;
+  getVehicleDiagnostic(id: string): Promise<VehicleDiagnostic | undefined>;
+  getDiagnosticsByInspection(inspectionId: string): Promise<VehicleDiagnostic[]>;
+  getDiagnosticsByVehicle(vehicleId: string): Promise<VehicleDiagnostic[]>;
+  updateVehicleDiagnostic(id: string, diagnostic: Partial<InsertVehicleDiagnostic>): Promise<VehicleDiagnostic | undefined>;
+  deleteVehicleDiagnostic(id: string): Promise<boolean>;
+}
+
+export class DatabaseStorage implements IStorage {
+  constructor(private db: ReturnType<typeof drizzle>) {}
+
+  // Users
+  async getUsers(): Promise<User[]> {
+    return await this.db.select().from(users);
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const newUser = { ...user, id: randomUUID() };
+    await this.db.insert(users).values(newUser);
+    return newUser as User;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await this.db.delete(users).where(eq(users.id, id));
+    return true;
+  }
+
+  // Students
+  async getStudents(): Promise<Student[]> {
+    return await this.db.select().from(students);
+  }
+
+  async getStudent(id: string): Promise<Student | undefined> {
+    const result = await this.db.select().from(students).where(eq(students.id, id));
+    return result[0];
+  }
+
+  async createStudent(student: InsertStudent): Promise<Student> {
+    const newStudent = { ...student, id: randomUUID() };
+    await this.db.insert(students).values(newStudent);
+    return newStudent as Student;
+  }
+
+  async deleteStudent(id: string): Promise<boolean> {
+    await this.db.delete(students).where(eq(students.id, id));
+    return true;
+  }
+
+  // Documents
+  async getDocuments(): Promise<Document[]> {
+    return await this.db.select().from(documents);
+  }
+
+  async getDocument(id: string): Promise<Document | undefined> {
+    const result = await this.db.select().from(documents).where(eq(documents.id, id));
+    return result[0];
+  }
+
+  async getDocumentsByStudent(studentId: string): Promise<Document[]> {
+    return await this.db.select().from(documents).where(eq(documents.studentId, studentId));
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const newDocument = { ...document, id: randomUUID() };
+    await this.db.insert(documents).values(newDocument);
+    return newDocument as Document;
+  }
+
+  async deleteDocument(id: string): Promise<boolean> {
+    await this.db.delete(documents).where(eq(documents.id, id));
+    return true;
+  }
+
+  // Staff
+  async getStaff(): Promise<Staff[]> {
+    return await this.db.select().from(staff);
+  }
+
+  async getStaffMember(id: string): Promise<Staff | undefined> {
+    const result = await this.db.select().from(staff).where(eq(staff.id, id));
+    return result[0];
+  }
+
+  async createStaff(staffMember: InsertStaff): Promise<Staff> {
+    const newStaff = { ...staffMember, id: randomUUID() };
+    await this.db.insert(staff).values(newStaff);
+    return newStaff as Staff;
+  }
+
+  async deleteStaff(id: string): Promise<boolean> {
+    await this.db.delete(staff).where(eq(staff.id, id));
+    return true;
+  }
+
+  // Clients
+  async getClients(): Promise<Client[]> {
+    return await this.db.select().from(clients);
+  }
+
+  async getClient(id: string): Promise<Client | undefined> {
+    const result = await this.db.select().from(clients).where(eq(clients.id, id));
+    return result[0];
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const newClient = { ...client, id: randomUUID() };
+    await this.db.insert(clients).values(newClient);
+    return newClient as Client;
+  }
+
+  async deleteClient(id: string): Promise<boolean> {
+    await this.db.delete(clients).where(eq(clients.id, id));
+    return true;
+  }
+
+  // Vehicles
+  async getVehicles(): Promise<Vehicle[]> {
+    return await this.db.select().from(vehicles);
+  }
+
+  async getVehicle(id: string): Promise<Vehicle | undefined> {
+    const result = await this.db.select().from(vehicles).where(eq(vehicles.id, id));
+    return result[0];
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const newVehicle = { ...vehicle, id: randomUUID() };
+    await this.db.insert(vehicles).values(newVehicle);
+    return newVehicle as Vehicle;
+  }
+
+  async deleteVehicle(id: string): Promise<boolean> {
+    await this.db.delete(vehicles).where(eq(vehicles.id, id));
+    return true;
+  }
+
+  // Jobs
+  async getJobs(): Promise<Job[]> {
+    return await this.db.select().from(jobs);
+  }
+
+  async getJob(id: string): Promise<Job | undefined> {
+    const result = await this.db.select().from(jobs).where(eq(jobs.id, id));
+    return result[0];
+  }
+
+  async getJobsByClient(clientId: string): Promise<Job[]> {
+    return await this.db.select().from(jobs).where(eq(jobs.clientId, clientId));
+  }
+
+  async createJob(job: InsertJob): Promise<Job> {
+    const newJob = { ...job, id: randomUUID() };
+    await this.db.insert(jobs).values(newJob);
+    return newJob as Job;
+  }
+
+  async deleteJob(id: string): Promise<boolean> {
+    await this.db.delete(jobs).where(eq(jobs.id, id));
+    return true;
+  }
+
+  // Suppliers
+  async getSuppliers(): Promise<Supplier[]> {
+    return await this.db.select().from(suppliers);
+  }
+
+  async getSupplier(id: string): Promise<Supplier | undefined> {
+    const result = await this.db.select().from(suppliers).where(eq(suppliers.id, id));
+    return result[0];
+  }
+
+  async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
+    const newSupplier = { ...supplier, id: randomUUID() };
+    await this.db.insert(suppliers).values(newSupplier);
+    return newSupplier as Supplier;
+  }
+
+  async deleteSupplier(id: string): Promise<boolean> {
+    await this.db.delete(suppliers).where(eq(suppliers.id, id));
+    return true;
+  }
+
+  // For methods not yet implemented, provide placeholder implementations
+  async getVehicleInspections(): Promise<VehicleInspection[]> { return []; }
+  async getVehicleInspection(): Promise<VehicleInspection | undefined> { return undefined; }
+  async getInspectionsByVehicle(): Promise<VehicleInspection[]> { return []; }
+  async createVehicleInspection(): Promise<VehicleInspection> { throw new Error("Not implemented"); }
+  async deleteVehicleInspection(): Promise<boolean> { return false; }
+  async getInspectionMedia(): Promise<InspectionMedia[]> { return []; }
+  async getInspectionMediaByInspection(): Promise<InspectionMedia[]> { return []; }
+  async createInspectionMedia(): Promise<InspectionMedia> { throw new Error("Not implemented"); }
+  async deleteInspectionMedia(): Promise<boolean> { return false; }
+  async getOperatingExpenses(): Promise<OperatingExpense[]> { return []; }
+  async getOperatingExpense(): Promise<OperatingExpense | undefined> { return undefined; }
+  async createOperatingExpense(): Promise<OperatingExpense> { throw new Error("Not implemented"); }
+  async deleteOperatingExpense(): Promise<boolean> { return false; }
+  async getJobInvoices(): Promise<JobInvoice[]> { return []; }
+  async getJobInvoice(): Promise<JobInvoice | undefined> { return undefined; }
+  async getInvoicesByJob(): Promise<JobInvoice[]> { return []; }
+  async createJobInvoice(): Promise<JobInvoice> { throw new Error("Not implemented"); }
+  async deleteJobInvoice(): Promise<boolean> { return false; }
+  async getTestimonials(): Promise<Testimonial[]> { return []; }
+  async createTestimonial(): Promise<Testimonial> { throw new Error("Not implemented"); }
+  async deleteTestimonial(): Promise<boolean> { return false; }
+  async getHRNotes(): Promise<HRNote[]> { return []; }
+  async createHRNote(): Promise<HRNote> { throw new Error("Not implemented"); }
+  async deleteHRNote(): Promise<boolean> { return false; }
+  async getCertificates(): Promise<Certificate[]> { return []; }
+  async createCertificate(): Promise<Certificate> { throw new Error("Not implemented"); }
+  async deleteCertificate(): Promise<boolean> { return false; }
+  async getInventoryItems(): Promise<InventoryItem[]> { return []; }
+  async getInventoryItem(): Promise<InventoryItem | undefined> { return undefined; }
+  async createInventoryItem(): Promise<InventoryItem> { throw new Error("Not implemented"); }
+  async deleteInventoryItem(): Promise<boolean> { return false; }
+  async getPurchaseOrders(): Promise<PurchaseOrder[]> { return []; }
+  async createPurchaseOrder(): Promise<PurchaseOrder> { throw new Error("Not implemented"); }
+  async deletePurchaseOrder(): Promise<boolean> { return false; }
+  async getNextPONumber(): Promise<string> { return ""; }
+  async getInventoryTransactions(): Promise<InventoryTransaction[]> { return []; }
+  async getInventoryTransaction(): Promise<InventoryTransaction | undefined> { return undefined; }
+  async getTransactionsByItem(): Promise<InventoryTransaction[]> { return []; }
+  async getTransactionsByJob(): Promise<InventoryTransaction[]> { return []; }
+  async getTransactionsByType(): Promise<InventoryTransaction[]> { return []; }
+  async createInventoryTransaction(): Promise<InventoryTransaction> { throw new Error("Not implemented"); }
+  async getPartsUsage(): Promise<PartsUsage[]> { return []; }
+  async getPartsUsageByJob(): Promise<PartsUsage[]> { return []; }
+  async getPartsUsageByItem(): Promise<PartsUsage[]> { return []; }
+  async createPartsUsage(): Promise<PartsUsage> { throw new Error("Not implemented"); }
+  async deletePartsUsage(): Promise<boolean> { return false; }
+
+  // QR Tokens
+  async createQRToken(token: InsertQRToken): Promise<QRToken> { throw new Error("Not implemented"); }
+  async getQRToken(): Promise<QRToken | undefined> { return undefined; }
+  async listQRTokens(): Promise<QRToken[]> { return []; }
+  async updateQRTokenUsage(): Promise<QRToken | undefined> { return undefined; }
+  async revokeQRToken(): Promise<QRToken | undefined> { return undefined; }
+  async deleteQRToken(): Promise<boolean> { return false; }
+  async getQRTokenStats(): Promise<{ activeCount: number; expiredCount: number; revokedCount: number }> { return { activeCount: 0, expiredCount: 0, revokedCount: 0 }; }
+  async getMobileSubmissions(): Promise<any[]> { return []; }
+
+  // Vehicle Problems
+  async getVehicleProblems(): Promise<VehicleProblem[]> {
+    return await this.db.select().from(vehicleProblems);
+  }
+
+  async getVehicleProblem(id: string): Promise<VehicleProblem | undefined> {
+    const result = await this.db.select().from(vehicleProblems).where(eq(vehicleProblems.id, id));
+    return result[0];
+  }
+
+  async getProblemsByCategory(category: string): Promise<VehicleProblem[]> {
+    return await this.db.select().from(vehicleProblems).where(eq(vehicleProblems.partCategory, category));
+  }
+
+  async searchProblems(query: string): Promise<VehicleProblem[]> {
+    // Client-side filtering since we can't do complex text search easily in Drizzle
+    const allProblems = await this.db.select().from(vehicleProblems);
+    const lowerQuery = query.toLowerCase();
+    return allProblems.filter(p =>
+      p.problemName.toLowerCase().includes(lowerQuery) ||
+      (p.symptoms && JSON.stringify(p.symptoms).toLowerCase().includes(lowerQuery)) ||
+      p.partCategory.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  async createVehicleProblem(problem: InsertVehicleProblem): Promise<VehicleProblem> {
+    const newProblem = { ...problem, id: randomUUID(), createdAt: new Date(), updatedAt: new Date() };
+    await this.db.insert(vehicleProblems).values(newProblem as any);
+    return newProblem as VehicleProblem;
+  }
+
+  async updateVehicleProblem(id: string, problem: Partial<InsertVehicleProblem>): Promise<VehicleProblem | undefined> {
+    const updated = { ...problem, updatedAt: new Date() };
+    await this.db.update(vehicleProblems).set(updated).where(eq(vehicleProblems.id, id));
+    return this.getVehicleProblem(id);
+  }
+
+  async deleteVehicleProblem(id: string): Promise<boolean> {
+    await this.db.delete(vehicleProblems).where(eq(vehicleProblems.id, id));
+    return true;
+  }
+
+  // Vehicle Diagnostics
+  async createVehicleDiagnostic(diagnostic: InsertVehicleDiagnostic): Promise<VehicleDiagnostic> {
+    const newDiagnostic = { ...diagnostic, id: randomUUID(), createdAt: new Date(), updatedAt: new Date() };
+    await this.db.insert(vehicleDiagnostics).values(newDiagnostic as any);
+    return newDiagnostic as VehicleDiagnostic;
+  }
+
+  async getVehicleDiagnostic(id: string): Promise<VehicleDiagnostic | undefined> {
+    const result = await this.db.select().from(vehicleDiagnostics).where(eq(vehicleDiagnostics.id, id));
+    return result[0];
+  }
+
+  async getDiagnosticsByInspection(inspectionId: string): Promise<VehicleDiagnostic[]> {
+    return await this.db.select().from(vehicleDiagnostics).where(eq(vehicleDiagnostics.vehicleInspectionId, inspectionId));
+  }
+
+  async getDiagnosticsByVehicle(vehicleId: string): Promise<VehicleDiagnostic[]> {
+    return await this.db.select().from(vehicleDiagnostics).where(eq(vehicleDiagnostics.vehicleId, vehicleId));
+  }
+
+  async updateVehicleDiagnostic(id: string, diagnostic: Partial<InsertVehicleDiagnostic>): Promise<VehicleDiagnostic | undefined> {
+    const updated = { ...diagnostic, updatedAt: new Date() };
+    await this.db.update(vehicleDiagnostics).set(updated).where(eq(vehicleDiagnostics.id, id));
+    return this.getVehicleDiagnostic(id);
+  }
+
+  async deleteVehicleDiagnostic(id: string): Promise<boolean> {
+    await this.db.delete(vehicleDiagnostics).where(eq(vehicleDiagnostics.id, id));
+    return true;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -199,6 +613,10 @@ export class MemStorage implements IStorage {
   private students: Map<string, Student>;
   private documents: Map<string, Document>;
   private staff: Map<string, Staff>;
+  private leaveRequests: Map<string, LeaveRequest>;
+  private payrollRecords: Map<string, PayrollRecord>;
+  private performanceReviews: Map<string, PerformanceReview>;
+  private employeeBenefits: Map<string, EmployeeBenefit>;
   private clients: Map<string, Client>;
   private operatingExpenses: Map<string, OperatingExpense>;
   private jobInvoices: Map<string, JobInvoice>;
@@ -214,12 +632,19 @@ export class MemStorage implements IStorage {
   private purchaseOrders: Map<string, PurchaseOrder>;
   private inventoryTransactions: Map<string, InventoryTransaction>;
   private partsUsage: Map<string, PartsUsage>;
+  private qrTokens: Map<string, QRToken> = new Map();
+  private vehicleProblems: Map<string, VehicleProblem>;
+  private vehicleDiagnostics: Map<string, VehicleDiagnostic>;
 
   constructor() {
     this.users = new Map();
     this.students = new Map();
     this.documents = new Map();
     this.staff = new Map();
+    this.leaveRequests = new Map();
+    this.payrollRecords = new Map();
+    this.performanceReviews = new Map();
+    this.employeeBenefits = new Map();
     this.clients = new Map();
     this.operatingExpenses = new Map();
     this.jobInvoices = new Map();
@@ -235,6 +660,8 @@ export class MemStorage implements IStorage {
     this.purchaseOrders = new Map();
     this.inventoryTransactions = new Map();
     this.partsUsage = new Map();
+    this.vehicleProblems = new Map();
+    this.vehicleDiagnostics = new Map();
     
     // Seed some initial data for testing
     this.seedData();
@@ -1096,6 +1523,172 @@ export class MemStorage implements IStorage {
     return this.staff.delete(id);
   }
 
+  // ============ LEAVE REQUEST METHODS ============
+  async getLeaveRequests(): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values());
+  }
+
+  async getLeaveRequestsByStaff(staffId: string): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values()).filter(r => r.staffId === staffId);
+  }
+
+  async getLeaveRequestsByStatus(status: string): Promise<LeaveRequest[]> {
+    return Array.from(this.leaveRequests.values()).filter(r => r.status === status);
+  }
+
+  async getLeaveRequest(id: string): Promise<LeaveRequest | undefined> {
+    return this.leaveRequests.get(id);
+  }
+
+  async createLeaveRequest(insertRequest: InsertLeaveRequest): Promise<LeaveRequest> {
+    const id = randomUUID();
+    const request: LeaveRequest = {
+      ...insertRequest,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.leaveRequests.set(id, request);
+    return request;
+  }
+
+  async updateLeaveRequest(id: string, updates: Partial<InsertLeaveRequest>): Promise<LeaveRequest | undefined> {
+    const request = this.leaveRequests.get(id);
+    if (!request) return undefined;
+    
+    const updatedRequest = { ...request, ...updates, updatedAt: new Date() };
+    this.leaveRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  async deleteLeaveRequest(id: string): Promise<boolean> {
+    return this.leaveRequests.delete(id);
+  }
+
+  // ============ PAYROLL RECORD METHODS ============
+  async getPayrollRecords(): Promise<PayrollRecord[]> {
+    return Array.from(this.payrollRecords.values());
+  }
+
+  async getPayrollRecordsByStaff(staffId: string): Promise<PayrollRecord[]> {
+    return Array.from(this.payrollRecords.values()).filter(r => r.staffId === staffId);
+  }
+
+  async getPayrollRecordsByPeriod(startDate: Date, endDate: Date): Promise<PayrollRecord[]> {
+    return Array.from(this.payrollRecords.values()).filter(r => 
+      new Date(r.payPeriodStart) >= startDate && new Date(r.payPeriodEnd) <= endDate
+    );
+  }
+
+  async getPayrollRecord(id: string): Promise<PayrollRecord | undefined> {
+    return this.payrollRecords.get(id);
+  }
+
+  async createPayrollRecord(insertRecord: InsertPayrollRecord): Promise<PayrollRecord> {
+    const id = randomUUID();
+    const record: PayrollRecord = {
+      ...insertRecord,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.payrollRecords.set(id, record);
+    return record;
+  }
+
+  async updatePayrollRecord(id: string, updates: Partial<InsertPayrollRecord>): Promise<PayrollRecord | undefined> {
+    const record = this.payrollRecords.get(id);
+    if (!record) return undefined;
+    
+    const updatedRecord = { ...record, ...updates, updatedAt: new Date() };
+    this.payrollRecords.set(id, updatedRecord);
+    return updatedRecord;
+  }
+
+  async deletePayrollRecord(id: string): Promise<boolean> {
+    return this.payrollRecords.delete(id);
+  }
+
+  // ============ PERFORMANCE REVIEW METHODS ============
+  async getPerformanceReviews(): Promise<PerformanceReview[]> {
+    return Array.from(this.performanceReviews.values());
+  }
+
+  async getPerformanceReviewsByStaff(staffId: string): Promise<PerformanceReview[]> {
+    return Array.from(this.performanceReviews.values()).filter(r => r.staffId === staffId);
+  }
+
+  async getPerformanceReviewsForReviewer(reviewerId: string): Promise<PerformanceReview[]> {
+    return Array.from(this.performanceReviews.values()).filter(r => r.reviewerId === reviewerId);
+  }
+
+  async getPerformanceReview(id: string): Promise<PerformanceReview | undefined> {
+    return this.performanceReviews.get(id);
+  }
+
+  async createPerformanceReview(insertReview: InsertPerformanceReview): Promise<PerformanceReview> {
+    const id = randomUUID();
+    const review: PerformanceReview = {
+      ...insertReview,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.performanceReviews.set(id, review);
+    return review;
+  }
+
+  async updatePerformanceReview(id: string, updates: Partial<InsertPerformanceReview>): Promise<PerformanceReview | undefined> {
+    const review = this.performanceReviews.get(id);
+    if (!review) return undefined;
+    
+    const updatedReview = { ...review, ...updates, updatedAt: new Date() };
+    this.performanceReviews.set(id, updatedReview);
+    return updatedReview;
+  }
+
+  async deletePerformanceReview(id: string): Promise<boolean> {
+    return this.performanceReviews.delete(id);
+  }
+
+  // ============ EMPLOYEE BENEFIT METHODS ============
+  async getEmployeeBenefits(): Promise<EmployeeBenefit[]> {
+    return Array.from(this.employeeBenefits.values());
+  }
+
+  async getEmployeeBenefitsByStaff(staffId: string): Promise<EmployeeBenefit[]> {
+    return Array.from(this.employeeBenefits.values()).filter(b => b.staffId === staffId);
+  }
+
+  async getEmployeeBenefit(id: string): Promise<EmployeeBenefit | undefined> {
+    return this.employeeBenefits.get(id);
+  }
+
+  async createEmployeeBenefit(insertBenefit: InsertEmployeeBenefit): Promise<EmployeeBenefit> {
+    const id = randomUUID();
+    const benefit: EmployeeBenefit = {
+      ...insertBenefit,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.employeeBenefits.set(id, benefit);
+    return benefit;
+  }
+
+  async updateEmployeeBenefit(id: string, updates: Partial<InsertEmployeeBenefit>): Promise<EmployeeBenefit | undefined> {
+    const benefit = this.employeeBenefits.get(id);
+    if (!benefit) return undefined;
+    
+    const updatedBenefit = { ...benefit, ...updates, updatedAt: new Date() };
+    this.employeeBenefits.set(id, updatedBenefit);
+    return updatedBenefit;
+  }
+
+  async deleteEmployeeBenefit(id: string): Promise<boolean> {
+    return this.employeeBenefits.delete(id);
+  }
+
   // ============ CLIENT METHODS ============
   async getClients(): Promise<Client[]> {
     return Array.from(this.clients.values());
@@ -1900,6 +2493,211 @@ export class MemStorage implements IStorage {
   async deletePartsUsage(id: string): Promise<boolean> {
     return this.partsUsage.delete(id);
   }
+
+  // ============ QR TOKENS METHODS ============
+  private qrTokens: Map<string, QRToken> = new Map();
+
+  async createQRToken(token: InsertQRToken): Promise<QRToken> {
+    const newToken: QRToken = {
+      id: randomUUID(),
+      ...token,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.qrTokens.set(newToken.id, newToken);
+    return newToken;
+  }
+
+  async getQRToken(tokenId: string): Promise<QRToken | undefined> {
+    // Check both by ID and by token string
+    let token = this.qrTokens.get(tokenId);
+    if (!token) {
+      token = Array.from(this.qrTokens.values()).find(t => t.tokenString === tokenId);
+    }
+    return token;
+  }
+
+  async listQRTokens(): Promise<QRToken[]> {
+    return Array.from(this.qrTokens.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async updateQRTokenUsage(tokenId: string): Promise<QRToken | undefined> {
+    const token = await this.getQRToken(tokenId);
+    if (token) {
+      token.usageCount = String((parseInt(token.usageCount || "0") + 1));
+      token.lastUsedAt = new Date();
+      token.updatedAt = new Date();
+      this.qrTokens.set(token.id, token);
+    }
+    return token;
+  }
+
+  async revokeQRToken(tokenId: string): Promise<QRToken | undefined> {
+    const token = await this.getQRToken(tokenId);
+    if (token) {
+      token.revokedAt = new Date();
+      token.updatedAt = new Date();
+      this.qrTokens.set(token.id, token);
+    }
+    return token;
+  }
+
+  async deleteQRToken(tokenId: string): Promise<boolean> {
+    return this.qrTokens.delete(tokenId);
+  }
+
+  async getQRTokenStats(): Promise<{ activeCount: number; expiredCount: number; revokedCount: number }> {
+    const tokens = Array.from(this.qrTokens.values());
+    const now = new Date();
+    return {
+      activeCount: tokens.filter(t => !t.revokedAt && new Date(t.expiresAt) > now).length,
+      expiredCount: tokens.filter(t => new Date(t.expiresAt) < now).length,
+      revokedCount: tokens.filter(t => t.revokedAt).length,
+    };
+  }
+
+  async getMobileSubmissions(limit: number): Promise<any[]> {
+    const recentDocs = Array.from(this.documents.values())
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .slice(0, Math.floor(limit / 2));
+    const recentJobs = Array.from(this.jobs.values())
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .slice(0, Math.ceil(limit / 2));
+    return [...recentDocs, ...recentJobs];
+  }
+
+  // ============ VEHICLE PROBLEMS METHODS ============
+
+  async getVehicleProblems(): Promise<VehicleProblem[]> {
+    return Array.from(this.vehicleProblems.values());
+  }
+
+  async getVehicleProblem(id: string): Promise<VehicleProblem | undefined> {
+    return this.vehicleProblems.get(id);
+  }
+
+  async getProblemsByCategory(category: string): Promise<VehicleProblem[]> {
+    return Array.from(this.vehicleProblems.values()).filter(p => p.partCategory === category);
+  }
+
+  async searchProblems(query: string): Promise<VehicleProblem[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.vehicleProblems.values()).filter(p =>
+      p.problemName.toLowerCase().includes(lowerQuery) ||
+      (p.symptoms && JSON.stringify(p.symptoms).toLowerCase().includes(lowerQuery)) ||
+      p.partCategory.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  async createVehicleProblem(problem: InsertVehicleProblem): Promise<VehicleProblem> {
+    const newProblem: VehicleProblem = {
+      id: randomUUID(),
+      ...problem,
+      frequencyCount: "0",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicleProblems.set(newProblem.id, newProblem);
+    return newProblem;
+  }
+
+  async updateVehicleProblem(id: string, problem: Partial<InsertVehicleProblem>): Promise<VehicleProblem | undefined> {
+    const existing = this.vehicleProblems.get(id);
+    if (existing) {
+      const updated = { ...existing, ...problem, updatedAt: new Date() };
+      this.vehicleProblems.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteVehicleProblem(id: string): Promise<boolean> {
+    return this.vehicleProblems.delete(id);
+  }
+
+  // ============ VEHICLE DIAGNOSTICS METHODS ============
+
+  async createVehicleDiagnostic(diagnostic: InsertVehicleDiagnostic): Promise<VehicleDiagnostic> {
+    const newDiagnostic: VehicleDiagnostic = {
+      id: randomUUID(),
+      ...diagnostic,
+      vehicleId: diagnostic.vehicleId || "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.vehicleDiagnostics.set(newDiagnostic.id, newDiagnostic);
+    return newDiagnostic;
+  }
+
+  async getVehicleDiagnostic(id: string): Promise<VehicleDiagnostic | undefined> {
+    return this.vehicleDiagnostics.get(id);
+  }
+
+  async getDiagnosticsByInspection(inspectionId: string): Promise<VehicleDiagnostic[]> {
+    return Array.from(this.vehicleDiagnostics.values()).filter(d => d.vehicleInspectionId === inspectionId);
+  }
+
+  async getDiagnosticsByVehicle(vehicleId: string): Promise<VehicleDiagnostic[]> {
+    return Array.from(this.vehicleDiagnostics.values()).filter(d => d.vehicleId === vehicleId);
+  }
+
+  async updateVehicleDiagnostic(id: string, diagnostic: Partial<InsertVehicleDiagnostic>): Promise<VehicleDiagnostic | undefined> {
+    const existing = this.vehicleDiagnostics.get(id);
+    if (existing) {
+      const updated = { ...existing, ...diagnostic, updatedAt: new Date() };
+      this.vehicleDiagnostics.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteVehicleDiagnostic(id: string): Promise<boolean> {
+    return this.vehicleDiagnostics.delete(id);
+  }
 }
 
-export const storage = new MemStorage();
+// Initialize database connection and storage
+async function initializeStorage(): Promise<IStorage> {
+  try {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      console.warn("DATABASE_URL not set, falling back to MemStorage");
+      return new MemStorage();
+    }
+
+    const pgClient = new PgClient({
+      connectionString,
+    });
+
+    await pgClient.connect();
+    const db = drizzle(pgClient);
+    console.log("✅ Connected to PostgreSQL database");
+    
+    return new DatabaseStorage(db);
+  } catch (error) {
+    console.error("❌ Failed to initialize DatabaseStorage:", error);
+    console.warn("Falling back to MemStorage");
+    return new MemStorage();
+  }
+}
+
+// Create a promise-based export that resolves when storage is initialized
+export const storagePromise = initializeStorage();
+export { getStorage };
+
+async function getStorage(): Promise<IStorage> {
+  return storagePromise;
+}
+
+// For compatibility with existing code that expects synchronous access
+export let storage: IStorage = new MemStorage();
+
+// Initialize storage asynchronously
+initializeStorage().then((initialized) => {
+  storage = initialized;
+  console.log("✅ Storage layer initialized");
+}).catch((error) => {
+  console.error("❌ Storage initialization failed:", error);
+});

@@ -1,8 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import os from "os";
 import { registerRoutes } from "./routes";
+import { registerDiagnosticRoutes } from "./diagnosticRoutes";
 import { initRealtime } from "./realtime";
 import { serveStatic } from "./static";
+import { storagePromise } from "./storage";
 import { createServer } from "http";
 
 const app = express();
@@ -62,8 +64,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize storage first
+  await storagePromise;
+  
   await initRealtime(httpServer);
   await registerRoutes(httpServer, app);
+  await registerDiagnosticRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -84,8 +90,16 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+    try {
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
+    } catch (error: any) {
+      // Vite might fail due to crypto.hash compatibility issues on older Node versions
+      // Fallback to serving static files
+      console.error("⚠️  Vite setup failed:", error.message);
+      console.log("📦 Falling back to static file serving");
+      serveStatic(app);
+    }
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

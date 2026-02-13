@@ -106,6 +106,145 @@ export const insertStaffSchema = createInsertSchema(staff).omit({
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type Staff = typeof staff.$inferSelect;
 
+// ============ LEAVE REQUESTS TABLE ============
+export const leaveRequests = pgTable("leave_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  staffName: text("staff_name").notNull(),
+  leaveType: text("leave_type").notNull(), // "Vacation", "Sick", "Personal", "Unpaid", "Medical", "Bereavement"
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  numberOfDays: text("number_of_days").notNull(), // Calculated or provided
+  reason: text("reason"), // Optional reason for leave
+  status: text("status").notNull().default('Pending'), // "Pending", "Approved", "Rejected", "Cancelled"
+  approvedBy: varchar("approved_by").references(() => staff.id, { onDelete: 'set null' }),
+  approverName: text("approver_name"),
+  approvalDate: timestamp("approval_date"),
+  comments: text("comments"), // For approval rejection reasons
+  emergency: text("emergency").notNull().default('false'), // Is this an emergency request?
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+
+// ============ PAYROLL RECORDS TABLE ============
+export const payrollRecords = pgTable("payroll_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  staffName: text("staff_name").notNull(),
+  payPeriodStart: timestamp("pay_period_start").notNull(),
+  payPeriodEnd: timestamp("pay_period_end").notNull(),
+  baseSalary: text("base_salary").notNull(), // Base pay for the period
+  hoursWorked: text("hours_worked").notNull().default("0"), // Total hours worked
+  basicPay: text("basic_pay").notNull(), // baseSalary or calculated from hourly rate
+  overtimeHours: text("overtime_hours").default("0"),
+  overtimePay: text("overtime_pay").default("0"),
+  bonuses: text("bonuses").default("0"), // JSON object for different types of bonuses
+  deductions: text("deductions").default("0"), // JSON object for tax, insurance, etc.
+  grossSalary: text("gross_salary").notNull(), // Basic + Overtime + Bonuses
+  netSalary: text("net_salary").notNull(), // Gross - Deductions
+  paymentMethod: text("payment_method").notNull().default('Bank Transfer'), // "Bank Transfer", "Check", "Cash"
+  paymentStatus: text("payment_status").notNull().default('Pending'), // "Pending", "Processed", "Paid", "Failed"
+  paymentDate: timestamp("payment_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPayrollRecordSchema = createInsertSchema(payrollRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPayrollRecord = z.infer<typeof insertPayrollRecordSchema>;
+export type PayrollRecord = typeof payrollRecords.$inferSelect;
+
+// ============ PERFORMANCE REVIEWS TABLE ============
+export const performanceReviews = pgTable("performance_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  staffName: text("staff_name").notNull(),
+  reviewerId: varchar("reviewer_id").notNull().references(() => staff.id, { onDelete: 'restrict' }),
+  reviewerName: text("reviewer_name").notNull(),
+  reviewPeriodStart: timestamp("review_period_start").notNull(),
+  reviewPeriodEnd: timestamp("review_period_end").notNull(),
+  
+  // Rating categories (1-5 scale)
+  technicalSkills: text("technical_skills").notNull(), // "1" to "5"
+  communication: text("communication").notNull(),
+  teamwork: text("teamwork").notNull(),
+  reliability: text("reliability").notNull(),
+  attendance: text("attendance").notNull(),
+  customerService: text("customer_service").notNull(),
+  problemSolving: text("problem_solving").notNull(),
+  initiative: text("initiative").notNull(),
+  
+  // Overall score (calculated average)
+  overallRating: text("overall_rating").notNull(),
+  
+  // Comments
+  strengths: text("strengths"), // What the employee does well
+  improvements: text("improvements"), // Areas for improvement
+  goalsForNextPeriod: text("goals_for_next_period"), // Goals for next review period
+  comments: text("comments"), // General comments
+  
+  // Status
+  status: text("status").notNull().default('Draft'), // "Draft", "Completed", "Discussed", "Acknowledged"
+  discussionDate: timestamp("discussion_date"),
+  employeeComments: text("employee_comments"), // Employee's response to the review
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPerformanceReviewSchema = createInsertSchema(performanceReviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPerformanceReview = z.infer<typeof insertPerformanceReviewSchema>;
+export type PerformanceReview = typeof performanceReviews.$inferSelect;
+
+// ============ EMPLOYEE BENEFITS TABLE ============
+export const employeeBenefits = pgTable("employee_benefits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  staffName: text("staff_name").notNull(),
+  benefitType: text("benefit_type").notNull(), // "Health Insurance", "Dental", "Vision", "401k", "Life Insurance", "Gym", "Other"
+  benefitName: text("benefit_name").notNull(),
+  provider: text("provider"), // Insurance provider or benefit provider
+  effectiveDate: timestamp("effective_date").notNull(),
+  expiryDate: timestamp("expiry_date"),
+  coverage: text("coverage"), // Details of coverage (e.g., self/family)
+  premium: text("premium").default("0"), // Employee's cost if any
+  employerContribution: text("employer_contribution").default("0"), // Employer's cost
+  status: text("status").notNull().default('Active'), // "Active", "Inactive", "Expired", "Pending"
+  policyNumber: text("policy_number"), // Reference number
+  documentId: varchar("document_id").references(() => documents.id, { onDelete: 'set null' }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertEmployeeBenefitSchema = createInsertSchema(employeeBenefits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertEmployeeBenefit = z.infer<typeof insertEmployeeBenefitSchema>;
+export type EmployeeBenefit = typeof employeeBenefits.$inferSelect;
+
 // ============ CLIENTS TABLE ============
 export const clients = pgTable("clients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -607,3 +746,91 @@ export const insertPartsUsageSchema = createInsertSchema(partsUsage).omit({
 
 export type InsertPartsUsage = z.infer<typeof insertPartsUsageSchema>;
 export type PartsUsage = typeof partsUsage.$inferSelect;
+
+// QR Tokens for mobile portal authentication
+export const qrTokens = pgTable("qr_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tokenString: text("token_string").notNull().unique(),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  clientName: text("client_name").notNull(),
+  actionType: text("action_type").notNull(), // "document" or "job"
+  accessUrl: text("access_url"), // Full URL with token for QR code
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: text("created_by"), // Admin user who created it
+  expiresAt: timestamp("expires_at").notNull(),
+  revokedAt: timestamp("revoked_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  usageCount: text("usage_count").default("0"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertQRTokenSchema = createInsertSchema(qrTokens).omit({
+  id: true,
+  tokenString: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertQRToken = z.infer<typeof insertQRTokenSchema>;
+export type QRToken = typeof qrTokens.$inferSelect;
+
+// ============ DIAGNOSTIC SYSTEM TABLES ============
+
+// Problems Library - Master list of all possible vehicle problems
+export const vehicleProblems = pgTable("vehicle_problems", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partCategory: text("part_category").notNull(), // "Engine", "Transmission", "Suspension", "Brakes", "Electrical", "Cooling", "Exhaust", "Lighting", "Interior", "Exterior"
+  problemName: text("problem_name").notNull(), // "Loss of Power", "Grinding Noise", "Fluid Leak", "Warning Light", etc.
+  symptoms: text("symptoms"), // JSON array of customer-facing descriptions
+  description: text("description"), // Detailed technical description
+  severity: text("severity").notNull().default('Moderate'), // "Minor", "Moderate", "Critical"
+  commonCauses: text("common_causes"), // JSON array of possible causes
+  estimatedRepairCost: text("estimated_repair_cost").default("0"), // Average cost estimate
+  estimatedRepairTime: text("estimated_repair_time"), // e.g., "1-2 hours", "Half day"
+  frequencyCount: text("frequency_count").default("0"), // How many times this problem has been diagnosed
+  createdBy: text("created_by"), // Staff member who added this problem
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVehicleProblemSchema = createInsertSchema(vehicleProblems).omit({
+  id: true,
+  frequencyCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVehicleProblem = z.infer<typeof insertVehicleProblemSchema>;
+export type VehicleProblem = typeof vehicleProblems.$inferSelect;
+
+// Vehicle Diagnostic Findings - Problems found during a specific inspection
+export const vehicleDiagnostics = pgTable("vehicle_diagnostics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleInspectionId: varchar("vehicle_inspection_id").notNull().references(() => vehicleInspections.id, { onDelete: 'cascade' }),
+  vehicleId: varchar("vehicle_id").notNull().references(() => vehicles.id, { onDelete: 'cascade' }),
+  problemId: varchar("problem_id").references(() => vehicleProblems.id, { onDelete: 'set null' }), // Null if custom/manual problem
+  problemName: text("problem_name").notNull(), // Store name in case problem is deleted
+  partCategory: text("part_category").notNull(), // Store category for searching
+  severity: text("severity").notNull().default('Moderate'), // "Minor", "Moderate", "Critical"
+  notes: text("notes"), // Specific notes about this car's issue
+  photos: text("photos"), // JSON array of photo URLs/paths
+  recommendedAction: text("recommended_action"), // What should be done about this
+  estimatedCost: text("estimated_cost"), // Cost for THIS vehicle
+  estimatedRepairTime: text("estimated_repair_time"),
+  status: text("status").notNull().default('Identified'), // "Identified", "Quoted", "Approved", "In Progress", "Repaired", "Deferred"
+  jobCreated: text("job_created").default('false'), // Whether a job was created for this
+  jobId: varchar("job_id").references(() => jobs.id, { onDelete: 'set null' }),
+  diagnosedBy: varchar("diagnosed_by").references(() => staff.id, { onDelete: 'set null' }),
+  diagnosedByName: text("diagnosed_by_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVehicleDiagnosticSchema = createInsertSchema(vehicleDiagnostics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVehicleDiagnostic = z.infer<typeof insertVehicleDiagnosticSchema>;
+export type VehicleDiagnostic = typeof vehicleDiagnostics.$inferSelect;

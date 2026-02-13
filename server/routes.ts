@@ -7,6 +7,10 @@ import {
   insertStudentSchema, 
   insertDocumentSchema,
   insertStaffSchema,
+  insertLeaveRequestSchema,
+  insertPayrollRecordSchema,
+  insertPerformanceReviewSchema,
+  insertEmployeeBenefitSchema,
   insertClientSchema,
   insertOperatingExpenseSchema,
   insertJobInvoiceSchema,
@@ -502,6 +506,288 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Staff member not found" });
       }
       res.json({ message: "Staff member deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ LEAVE REQUEST ROUTES ============
+  
+  app.get("/api/leave-requests", async (_req, res) => {
+    try {
+      const requests = await storage.getLeaveRequests();
+      res.json(requests);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/leave-requests/staff/:staffId", async (req, res) => {
+    try {
+      const requests = await storage.getLeaveRequestsByStaff(req.params.staffId);
+      res.json(requests);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/leave-requests/status/:status", async (req, res) => {
+    try {
+      const requests = await storage.getLeaveRequestsByStatus(req.params.status);
+      res.json(requests);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/leave-requests/:id", async (req, res) => {
+    try {
+      const request = await storage.getLeaveRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ message: "Leave request not found" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/leave-requests", async (req, res) => {
+    try {
+      const validatedData = insertLeaveRequestSchema.parse(req.body);
+      const request = await storage.createLeaveRequest(validatedData);
+      res.status(201).json(request);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/leave-requests/:id", async (req, res) => {
+    try {
+      const request = await storage.updateLeaveRequest(req.params.id, req.body);
+      if (!request) {
+        return res.status(404).json({ message: "Leave request not found" });
+      }
+      res.json(request);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/leave-requests/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteLeaveRequest(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Leave request not found" });
+      }
+      res.json({ message: "Leave request deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ PAYROLL ROUTES ============
+  
+  app.get("/api/payroll", async (_req, res) => {
+    try {
+      const records = await storage.getPayrollRecords();
+      res.json(records);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/payroll/staff/:staffId", async (req, res) => {
+    try {
+      const records = await storage.getPayrollRecordsByStaff(req.params.staffId);
+      res.json(records);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/payroll/:id", async (req, res) => {
+    try {
+      const record = await storage.getPayrollRecord(req.params.id);
+      if (!record) {
+        return res.status(404).json({ message: "Payroll record not found" });
+      }
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/payroll", async (req, res) => {
+    try {
+      const validatedData = insertPayrollRecordSchema.parse(req.body);
+      const record = await storage.createPayrollRecord(validatedData);
+      res.status(201).json(record);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/payroll/:id", async (req, res) => {
+    try {
+      const record = await storage.updatePayrollRecord(req.params.id, req.body);
+      if (!record) {
+        return res.status(404).json({ message: "Payroll record not found" });
+      }
+      res.json(record);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/payroll/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePayrollRecord(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Payroll record not found" });
+      }
+      res.json({ message: "Payroll record deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ PERFORMANCE REVIEW ROUTES ============
+  
+  app.get("/api/performance-reviews", async (_req, res) => {
+    try {
+      const reviews = await storage.getPerformanceReviews();
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/performance-reviews/staff/:staffId", async (req, res) => {
+    try {
+      const reviews = await storage.getPerformanceReviewsByStaff(req.params.staffId);
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/performance-reviews/reviewer/:reviewerId", async (req, res) => {
+    try {
+      const reviews = await storage.getPerformanceReviewsForReviewer(req.params.reviewerId);
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/performance-reviews/:id", async (req, res) => {
+    try {
+      const review = await storage.getPerformanceReview(req.params.id);
+      if (!review) {
+        return res.status(404).json({ message: "Performance review not found" });
+      }
+      res.json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/performance-reviews", async (req, res) => {
+    try {
+      const validatedData = insertPerformanceReviewSchema.parse(req.body);
+      const review = await storage.createPerformanceReview(validatedData);
+      res.status(201).json(review);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/performance-reviews/:id", async (req, res) => {
+    try {
+      const review = await storage.updatePerformanceReview(req.params.id, req.body);
+      if (!review) {
+        return res.status(404).json({ message: "Performance review not found" });
+      }
+      res.json(review);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/performance-reviews/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePerformanceReview(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Performance review not found" });
+      }
+      res.json({ message: "Performance review deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ============ EMPLOYEE BENEFITS ROUTES ============
+  
+  app.get("/api/benefits", async (_req, res) => {
+    try {
+      const benefits = await storage.getEmployeeBenefits();
+      res.json(benefits);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/benefits/staff/:staffId", async (req, res) => {
+    try {
+      const benefits = await storage.getEmployeeBenefitsByStaff(req.params.staffId);
+      res.json(benefits);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/benefits/:id", async (req, res) => {
+    try {
+      const benefit = await storage.getEmployeeBenefit(req.params.id);
+      if (!benefit) {
+        return res.status(404).json({ message: "Benefit not found" });
+      }
+      res.json(benefit);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/benefits", async (req, res) => {
+    try {
+      const validatedData = insertEmployeeBenefitSchema.parse(req.body);
+      const benefit = await storage.createEmployeeBenefit(validatedData);
+      res.status(201).json(benefit);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.put("/api/benefits/:id", async (req, res) => {
+    try {
+      const benefit = await storage.updateEmployeeBenefit(req.params.id, req.body);
+      if (!benefit) {
+        return res.status(404).json({ message: "Benefit not found" });
+      }
+      res.json(benefit);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/benefits/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteEmployeeBenefit(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Benefit not found" });
+      }
+      res.json({ message: "Benefit deleted successfully" });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

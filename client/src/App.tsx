@@ -18,9 +18,14 @@ import MobileJobCreator from "@/pages/MobileJobCreator";
 import DocumentCapture from "@/pages/DocumentCapture";
 import Academy from "@/pages/Academy";
 import AdminBills from "@/pages/AdminBills";
+import HRManagement from "@/pages/HRManagement";
+import EmployeeDetail from "@/pages/EmployeeDetail";
+import MobilePortal from "@/pages/MobilePortal";
+import QRManagement from "@/pages/QRManagement";
 
 import DVI from "@/pages/DVI";
 import DocumentCenter from "@/pages/DocumentCenter";
+import DiagnosticFinder from "@/pages/DiagnosticFinder";
 
 function Router() {
   return (
@@ -41,6 +46,11 @@ function Router() {
       <Route path="/documents" component={DocumentCenter} />
       <Route path="/communication" component={Communication} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/hr" component={HRManagement} />
+      <Route path="/employee/:id" component={EmployeeDetail} />
+      <Route path="/mobile-portal" component={MobilePortal} />
+      <Route path="/qr-management" component={QRManagement} />
+      <Route path="/diagnostics/:vehicleId/:inspectionId" component={DiagnosticFinder} />
       
       {/* Fallback routes for demos */}
       <Route path="/people" component={ClientDirectory} />
