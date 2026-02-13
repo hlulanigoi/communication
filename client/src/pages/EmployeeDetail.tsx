@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import type { Staff, LeaveRequest, PayrollRecord, PerformanceReview } from "@shared/schema";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://localhost:3000/api";
 
 export default function EmployeeDetail() {
   const [, setLocation] = useLocation();

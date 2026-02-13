@@ -52,7 +52,7 @@ import type {
   EmployeeBenefit,
 } from "@shared/schema";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://localhost:3000/api";
 
 export default function HRManagement() {
   const [, setLocation] = useLocation();
