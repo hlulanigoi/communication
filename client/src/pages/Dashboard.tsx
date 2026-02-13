@@ -352,7 +352,7 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 mb-4 bg-muted/20">
             <CardTitle className="text-sm">URGENT SERVICE TICKETS</CardTitle>
             <Button 
-              onClick={() => setLocation('/job-board')}
+              onClick={() => setLocation('/jobs')}
               variant="ghost" 
               size="sm" 
               className="text-[10px] h-7 px-2 font-bold uppercase tracking-tighter"
@@ -376,7 +376,7 @@ export default function Dashboard() {
                 {mockJobs.slice(0, 4).map((job) => (
                   <div 
                     key={job.id} 
-                    onClick={() => setLocation('/job-board')}
+                    onClick={() => setLocation('/jobs')}
                     className="flex items-start gap-4 p-3 border-l-2 border-l-primary bg-secondary/5 hover:bg-secondary/10 transition-all cursor-pointer rounded"
                   >
                     <div className={`mt-1 p-1.5 ${
